@@ -36,7 +36,6 @@
     "google-auth-library": "^6.1.1",
     "ioredis": "^4.17.3",
     "lodash.get": "^4.4.2",
-    "multiplatform-cart": "file:./libs/multiplatform-cart-0.8.8.tgz",
     "mysql": "^2.18.1",
     "passport-google-oauth20": "^2.0.0",
     "patch-package": "^6.2.2",
