@@ -1,0 +1,71 @@
+diff --git a/node_modules/axios-cache-adapter/dist/cache.node.js b/node_modules/axios-cache-adapter/dist/cache.node.js
+index d399e68..257ca37 100644
+--- a/node_modules/axios-cache-adapter/dist/cache.node.js
++++ b/node_modules/axios-cache-adapter/dist/cache.node.js
+@@ -3128,7 +3128,7 @@ __webpack_require__.r(__webpack_exports__);
+ /* harmony import */ var _serialize__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./serialize */ "./src/serialize.js");
+ /* harmony import */ var _utilities__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./utilities */ "./src/utilities.js");
+ 
+-
++var crypto = require('crypto');
+ 
+ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
+ 
+@@ -3263,14 +3263,34 @@ function _read() {
+   return _read.apply(this, arguments);
+ }
+ 
++function md5(data) {
++  return crypto.createHash('md5').update(data).digest("hex");
++}
++
+ function key(config) {
++  // if (Object(_utilities__WEBPACK_IMPORTED_MODULE_3__["isFunction"])(config.key)) return config.key;
++  // var cacheKey;
++  // if (Object(_utilities__WEBPACK_IMPORTED_MODULE_3__["isString"])(config.key)) cacheKey = function cacheKey(req) {
++  //   return "".concat(config.key, "/").concat(req.url).concat(serializeQuery(req));
++  // };else cacheKey = function cacheKey(req) {
++  //   return req.url + serializeQuery(req);
++  // };
++
+   if (Object(_utilities__WEBPACK_IMPORTED_MODULE_3__["isFunction"])(config.key)) return config.key;
+   var cacheKey;
+-  if (Object(_utilities__WEBPACK_IMPORTED_MODULE_3__["isString"])(config.key)) cacheKey = function cacheKey(req) {
+-    return "".concat(config.key, "/").concat(req.url).concat(serializeQuery(req));
+-  };else cacheKey = function cacheKey(req) {
+-    return req.url + serializeQuery(req);
+-  };
++
++  if (Object(_utilities__WEBPACK_IMPORTED_MODULE_3__["isString"])(config.key)) {
++    cacheKey = function cacheKey(req) {
++      var key = "".concat(config.key, "/").concat(req.url).concat(serializeQuery(req));
++      return req.data ? key + md5(req.data) : key;
++    };
++  } else {
++    cacheKey = function cacheKey(req) {
++      var key = req.url + serializeQuery(req);
++      return req.data ? key + md5(req.data) : key;
++    };
++  }
++
+   return cacheKey;
+ }
+ 
+@@ -3289,7 +3309,7 @@ function _defaultInvalidate() {
+           case 0:
+             method = req.method.toLowerCase();
+ 
+-            if (!(method !== 'get')) {
++            if (['get', 'post', 'patch', 'put', 'delete'].includes(method)) {
+               _context3.next = 4;
+               break;
+             }
+@@ -4140,7 +4160,7 @@ function _request() {
+           case 7:
+             method = req.method.toLowerCase();
+ 
+-            if (!(method === 'head' || method !== 'get')) {
++            if (!(method === 'head' || !['get', 'post', 'patch', 'put', 'delete'].includes(method))) {
+               _context.next = 10;
+               break;
+             }

@@ -1,0 +1,24 @@
+# Import ci-template
+include:
+  - project: 'workloads/ci-template'
+    ref: master
+    file: '/gitlab-ci.v2.2.yaml'
+
+variables:
+  # Docker image
+  IMAGE_REPOSITORY: asia.gcr.io/teko-registry/cart/cart-api
+
+# Unitest cases
+test:unitest:
+  stage: pretest
+  image: node:10.16
+  variables:
+    YARN_CACHE_FOLDER: ~/.yarn
+  before_script:
+    - echo 'Fixed me'
+    # - yarn install
+  script:
+    - echo 'Fixed me'
+    # - yarn test:cov --runInBand
+  tags:
+    - ci-general

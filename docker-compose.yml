@@ -1,0 +1,14 @@
+version: '3'
+
+volumes:
+  redis_master_data: {}
+
+services:
+  redis-master:
+    image: 'bitnami/redis:latest'
+    ports:
+      - '6379:6379'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    volumes:
+      - 'redis_master_data:/bitnami'
