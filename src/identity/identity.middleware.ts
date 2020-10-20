@@ -4,18 +4,15 @@ import {
   Injectable,
   NestMiddleware,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Request, Response, NextFunction } from 'express';
 import { IdentityService } from './identity.service';
-import { Repository } from 'typeorm';
-import { User } from 'src/auth/auth.entity';
+import { AuthService } from '../auth/auth.service';
 
 @Injectable()
 export class IdentityMiddleware implements NestMiddleware {
   constructor(
     private identityService: IdentityService,
-    @InjectRepository(User)
-    private readonly authRepo: Repository<User>,
+    private authService: AuthService,
   ) {}
   async use(request: Request, res: Response, next: NextFunction) {
     try {
@@ -25,7 +22,7 @@ export class IdentityMiddleware implements NestMiddleware {
         const { cid } = this.identityService.decodeUserToken(
           token.split(' ')[1],
         );
-        const user = await this.authRepo.findOne({ where: { id: cid } });
+        const user = this.authService.findOne({ where: { id: cid } });
         console.log(user);
         if (user) {
           (request as any).user = user;

@@ -45,4 +45,8 @@ export class AuthService {
     }
     return this.identityService.generateUserToken(user.id);
   }
+
+  async findOne(condition: any): Promise<User> {
+    return await this.authRepo.findOne(condition);
+  }
 }
