@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { OAuth2Client } from 'google-auth-library';
 import { Repository } from 'typeorm';
 import { IdentityService } from '../identity/identity.service';
+import { GetSampleTokenDto } from './auth.dto';
 import { User } from './auth.entity';
 
 @Injectable()
@@ -40,8 +41,19 @@ export class AuthService {
         givenName,
         familyName,
       });
-      console.log(newUser);
       return this.identityService.generateUserToken(newUser.id);
+    }
+    return this.identityService.generateUserToken(user.id);
+  }
+
+  async getTokenSample(params: GetSampleTokenDto) {
+    const { email, passwordSystem } = params;
+    if (passwordSystem !== 'test') {
+      return Promise.reject(new Error('Password wrong, contact DUCTT'));
+    }
+    const user = await this.authRepo.findOne({ where: { email } });
+    if (!user) {
+      return Promise.reject(new Error('Email not exist, contact DUCTT'));
     }
     return this.identityService.generateUserToken(user.id);
   }
