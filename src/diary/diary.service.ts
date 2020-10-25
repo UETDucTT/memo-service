@@ -44,7 +44,6 @@ export class DiaryService {
         createdAt: Between(new Date(0), new Date(toDate)),
       };
     }
-    console.log(betweenCondition);
     return await this.diaryRepo.findAndCount({
       where: {
         user: {
