@@ -1,5 +1,8 @@
 import { Expose } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import { Diary } from './diary.entity';
+import { DiaryResource } from 'src/resource/resource.entity';
+import { PaginationResponse } from 'src/types';
 
 export type ClassType<T = any> = new (...args: any[]) => T;
 
@@ -21,4 +24,15 @@ export class OnlyId {
   @ApiProperty()
   @Expose()
   id: string;
+}
+
+type Resource = Omit<DiaryResource, 'createdAt' | 'updatedAt'>;
+
+type DiaryItem = Omit<Diary, 'resource'> & {
+  resources: Resource[];
+};
+
+export class DiariesResponse {
+  diaries: DiaryItem[];
+  pagination: PaginationResponse;
 }

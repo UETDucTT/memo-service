@@ -14,6 +14,6 @@ import { DiaryService } from './diary.service';
 })
 export class DiaryModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(IdentityMiddleware).forRoutes('diaries');
+    consumer.apply(IdentityMiddleware).forRoutes(DiaryController);
   }
 }

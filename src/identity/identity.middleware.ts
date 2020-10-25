@@ -18,12 +18,10 @@ export class IdentityMiddleware implements NestMiddleware {
     try {
       const token = request.headers['authorization'] as string;
       if (token && token.split(' ').length === 2) {
-        console.log(token.split(' ')[1]);
         const { cid } = this.identityService.decodeUserToken(
           token.split(' ')[1],
         );
         const user = this.authService.findOne({ where: { id: cid } });
-        console.log(user);
         if (user) {
           (request as any).user = user;
           next();
