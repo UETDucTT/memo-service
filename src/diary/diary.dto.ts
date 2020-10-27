@@ -10,6 +10,7 @@ import {
   IsOptional,
   IsDateString,
   IsDate,
+  IsUUID,
 } from 'class-validator';
 import { Type } from 'src/resource/resource.entity';
 import { Emotion } from './diary.entity';
@@ -90,4 +91,10 @@ export class SearchDiaryDto {
   @IsDateString()
   @IsOptional()
   toDate: Date;
+}
+
+export class ParamDiaryDto {
+  @ApiProperty({ required: false, default: 'id' })
+  @IsUUID()
+  id: string;
 }

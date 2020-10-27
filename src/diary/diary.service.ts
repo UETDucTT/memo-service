@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, Between } from 'typeorm';
 import { CreateDiaryDto, SearchDiaryDto } from './diary.dto';
@@ -26,6 +26,17 @@ export class DiaryService {
 
   async create(params: CreateDiaryDtoWithUser) {
     return await this.diaryRepo.save(params);
+  }
+
+  async getById(id: string) {
+    const diary = await this.diaryRepo.findOne({
+      where: { id },
+      relations: ['resources'],
+    });
+    if (!diary) {
+      throw new NotFoundException(`Diary with id ${id} not found`);
+    }
+    return diary;
   }
 
   async getList(params: SearchDiaryDtoWithUser) {

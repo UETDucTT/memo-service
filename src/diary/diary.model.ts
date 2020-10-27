@@ -36,3 +36,7 @@ export class DiariesResponse {
   diaries: DiaryItem[];
   pagination: PaginationResponse;
 }
+
+export class DiaryResponse {
+  diary: DiaryItem;
+}

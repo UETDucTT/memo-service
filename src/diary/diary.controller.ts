@@ -7,6 +7,7 @@ import {
   ValidationPipe,
   Query,
   ParseIntPipe,
+  Param,
 } from '@nestjs/common';
 import { Transform } from 'class-transformer';
 import {
@@ -16,9 +17,14 @@ import {
   ApiBearerAuth,
   ApiQuery,
 } from '@nestjs/swagger';
-import { CreateDiaryDto, SearchDiaryDto } from './diary.dto';
+import { CreateDiaryDto, SearchDiaryDto, ParamDiaryDto } from './diary.dto';
 import { AuthMeta } from 'src/auth/auth.decorator';
-import { DiariesResponse, OnlyId, TransformResponse } from './diary.model';
+import {
+  DiariesResponse,
+  DiaryResponse,
+  OnlyId,
+  TransformResponse,
+} from './diary.model';
 import { DiaryService } from './diary.service';
 
 @Controller('diaries')
@@ -46,6 +52,21 @@ export class DiaryController {
         page: dto.page,
         pageSize: dto.pageSize,
       },
+    };
+  }
+
+  @Get(['/:id'])
+  @ApiBearerAuth('Authorization')
+  @ApiResponse({
+    status: 200,
+    description: 'get one diary',
+    type: TransformResponse(DiaryResponse),
+  })
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async getDiary(@Param() params: ParamDiaryDto): Promise<DiaryResponse> {
+    const res = await this.diaryService.getById(params.id);
+    return {
+      diary: res,
     };
   }
 
