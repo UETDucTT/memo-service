@@ -44,13 +44,16 @@ export class DiaryController {
     @AuthMeta() user,
     @Query() dto: SearchDiaryDto,
   ): Promise<DiariesResponse> {
-    const [list, cnt] = await this.diaryService.getList({ ...dto, user });
+    const { result, hasMore } = await this.diaryService.getList({
+      ...dto,
+      user,
+    });
+    const [list, cnt] = result;
     return {
       diaries: list,
       pagination: {
         totalItems: cnt,
-        page: dto.page,
-        pageSize: dto.pageSize,
+        hasMore,
       },
     };
   }

@@ -65,22 +65,22 @@ export class SearchDiaryDto {
   @ApiProperty({ required: false, default: 1 })
   @IsOptional()
   @Transform(val => {
-    if (isNaN(parseInt(val))) {
+    if (isNaN(parseInt(val)) || parseInt(val) <= 0) {
       throw new BadRequestException('page validation fail');
     }
     return parseInt(val);
   })
-  page: number = 1;
+  page: number;
 
   @ApiProperty({ required: false, default: 10 })
   @IsOptional()
   @Transform(val => {
-    if (isNaN(parseInt(val))) {
-      throw new BadRequestException('page validation fail');
+    if (isNaN(parseInt(val)) || parseInt(val) <= 0) {
+      throw new BadRequestException('pageSize validation fail');
     }
     return parseInt(val);
   })
-  pageSize: number = 10;
+  pageSize: number;
 
   @ApiProperty({ required: false })
   @IsOptional()
@@ -91,6 +91,11 @@ export class SearchDiaryDto {
   @IsDateString()
   @IsOptional()
   toDate: Date;
+
+  @ApiProperty({ required: false })
+  @IsUUID()
+  @IsOptional()
+  lastId: string;
 }
 
 export class ParamDiaryDto {

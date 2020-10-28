@@ -1,21 +1,24 @@
 import { Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { UserTokenPayload } from './identity.model';
+import { ConfigService } from '@nestjs/config';
+import jwt from 'jsonwebtoken';
 
 @Injectable()
 export class IdentityService {
-  constructor(private jwtService: JwtService) {}
+  constructor(private config: ConfigService) {}
 
-  decodeUserToken(token: string): UserTokenPayload {
-    return this.jwtService.verify(token);
+  decodeUserToken(token: string): any {
+    return jwt.verify(token, this.config.get<string>('identity.jwtSecretKey'));
   }
 
   generateUserToken(id: number) {
     return {
-      token: this.jwtService.sign({
-        cid: id,
-        iat: Date.now(),
-      }),
+      token: jwt.sign(
+        {
+          cid: id,
+        },
+        this.config.get<string>('identity.jwtSecretKey'),
+        { expiresIn: '604800s' },
+      ),
     };
   }
 }

@@ -36,6 +36,7 @@
     "date-fns": "^2.16.1",
     "google-auth-library": "^6.1.1",
     "ioredis": "^4.17.3",
+    "jsonwebtoken": "^8.5.1",
     "lodash.get": "^4.4.2",
     "mysql": "^2.18.1",
     "passport-google-oauth20": "^2.0.0",

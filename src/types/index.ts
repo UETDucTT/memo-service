@@ -4,6 +4,5 @@ export interface KeyValuePair {
 
 export class PaginationResponse {
   totalItems: number;
-  page: number;
-  pageSize: number;
+  hasMore: boolean;
 }
