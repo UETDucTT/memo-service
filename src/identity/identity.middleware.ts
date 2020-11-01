@@ -21,17 +21,11 @@ export class IdentityMiddleware implements NestMiddleware {
         const { cid } = this.identityService.decodeUserToken(
           token.split(' ')[1],
         );
-        const user = this.authService.findOne({ where: { id: cid } });
-        console.log(user);
+        const user = await this.authService.findOne({ where: { id: cid } });
         if (user) {
           (request as any).user = user;
           next();
           return;
-        } else {
-          throw new HttpException(
-            'Invalid or expired token',
-            HttpStatus.UNAUTHORIZED,
-          );
         }
       }
       throw new HttpException(
