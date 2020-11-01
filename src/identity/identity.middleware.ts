@@ -26,6 +26,11 @@ export class IdentityMiddleware implements NestMiddleware {
           (request as any).user = user;
           next();
           return;
+        } else {
+          throw new HttpException(
+            'Invalid or expired token',
+            HttpStatus.UNAUTHORIZED,
+          );
         }
       }
       throw new HttpException(
