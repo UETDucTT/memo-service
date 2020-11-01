@@ -22,6 +22,7 @@ export class IdentityMiddleware implements NestMiddleware {
           token.split(' ')[1],
         );
         const user = this.authService.findOne({ where: { id: cid } });
+        console.log(user);
         if (user) {
           (request as any).user = user;
           next();
