@@ -57,6 +57,7 @@ export class Diary {
   @ManyToOne(
     () => User,
     user => user.diaries,
+    { onDelete: 'CASCADE' },
   )
   user: User;
 

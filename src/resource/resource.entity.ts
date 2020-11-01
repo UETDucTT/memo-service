@@ -47,6 +47,7 @@ export class DiaryResource {
   @ManyToOne(
     () => Diary,
     diary => diary.resources,
+    { onDelete: 'CASCADE' },
   )
   diary: Diary;
 }

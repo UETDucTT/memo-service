@@ -8,6 +8,7 @@ import {
   Query,
   ParseIntPipe,
   Param,
+  Delete,
 } from '@nestjs/common';
 import { Transform } from 'class-transformer';
 import {
@@ -70,6 +71,21 @@ export class DiaryController {
     const res = await this.diaryService.getById(params.id);
     return {
       diary: res,
+    };
+  }
+
+  @Delete(['/:id'])
+  @ApiBearerAuth('Authorization')
+  @ApiResponse({
+    status: 200,
+    description: 'delete one diary',
+    type: TransformResponse(OnlyId),
+  })
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async deleteDiary(@Param() params: ParamDiaryDto): Promise<OnlyId> {
+    const deletedDiary = await this.diaryService.deleteById(params.id);
+    return {
+      id: deletedDiary,
     };
   }
 

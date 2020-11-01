@@ -39,6 +39,15 @@ export class DiaryService {
     return diary;
   }
 
+  async deleteById(id: string): Promise<string> {
+    const diary = await this.diaryRepo.findOne({ where: { id } });
+    if (!diary) {
+      throw new NotFoundException(`Diary with id ${id} not found`);
+    }
+    await this.diaryRepo.remove(diary);
+    return id;
+  }
+
   buildParams(params: SearchDiaryDtoWithUser) {
     let { page, pageSize, q, fromDate, toDate, user, lastId } = params;
     if (!lastId && !page) {
@@ -68,7 +77,6 @@ export class DiaryService {
       user,
       lastId,
     } = this.buildParams(params);
-    console.log(page, pageSize, q, fromDate, toDate, user, lastId);
     let betweenCondition = {};
     if (fromDate && toDate) {
       betweenCondition = {
