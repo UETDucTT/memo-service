@@ -9,5 +9,6 @@
   "migrations": ["dist/migration/*.js"],
   "cli": {
       "migrationsDir": "src/migration"
-  }
+  },
+  "charset": "utf8mb4"
 }
