@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, Between } from 'typeorm';
-import { CreateDiaryDto, SearchDiaryDto } from './diary.dto';
+import { CreateDiaryDto, SearchDiaryDto, EditDiaryDto } from './diary.dto';
 import { Diary } from './diary.entity';
 import { DiaryResource } from '../resource/resource.entity';
 import { User } from 'src/auth/auth.entity';
@@ -28,9 +28,23 @@ export class DiaryService {
     return await this.diaryRepo.save(params);
   }
 
-  async getById(id: string) {
+  async update(id: string, userId: string, params: EditDiaryDto) {
     const diary = await this.diaryRepo.findOne({
-      where: { id },
+      where: { id, user: { id: userId } },
+      relations: ['resources'],
+    });
+    if (!diary) {
+      throw new NotFoundException(`Diary with id ${id} not found`);
+    }
+    diary.resources = [];
+    this.diaryRepo.merge(diary, params);
+    await this.diaryRepo.save(diary);
+    return diary.id;
+  }
+
+  async getById(id: string, userId: string) {
+    const diary = await this.diaryRepo.findOne({
+      where: { id, user: { id: userId } },
       relations: ['resources'],
     });
     if (!diary) {
@@ -39,8 +53,10 @@ export class DiaryService {
     return diary;
   }
 
-  async deleteById(id: string): Promise<string> {
-    const diary = await this.diaryRepo.findOne({ where: { id } });
+  async deleteById(id: string, userId: string): Promise<string> {
+    const diary = await this.diaryRepo.findOne({
+      where: { id, user: { id: userId } },
+    });
     if (!diary) {
       throw new NotFoundException(`Diary with id ${id} not found`);
     }

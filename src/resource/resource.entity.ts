@@ -14,6 +14,7 @@ export enum Type {
   image = 'image',
   audio = 'audio',
   video = 'video',
+  document = 'document',
   other = 'other',
 }
 
@@ -24,6 +25,9 @@ export class DiaryResource {
 
   @Column({ type: 'text' })
   url: string;
+
+  @Column({ length: 255, nullable: true })
+  name: string;
 
   @Column({
     type: 'enum',

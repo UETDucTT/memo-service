@@ -9,13 +9,18 @@ import {
   IsArray,
   IsOptional,
   IsDateString,
-  IsDate,
   IsUUID,
 } from 'class-validator';
 import { Type } from 'src/resource/resource.entity';
 import { Emotion } from './diary.entity';
 
 export class ResourceDto {
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  @IsUUID()
+  id: string;
+
   @ApiProperty({ enum: Type })
   @IsDefined()
   @IsEnum(Type)
@@ -25,6 +30,11 @@ export class ResourceDto {
   @IsDefined()
   @IsString()
   url: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  name?: string;
 
   @ApiProperty()
   @IsString()
@@ -52,6 +62,35 @@ export class CreateDiaryDto {
   tag?: string;
 
   @ApiProperty({ required: false, type: () => [ResourceDto] })
+  @IsArray()
+  resources?: ResourceDto[];
+}
+
+export class EditDiaryDto {
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  title: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  content?: string;
+
+  @ApiProperty({ required: false, enum: Emotion })
+  @IsOptional()
+  @IsEnum(Emotion)
+  emotion?: Emotion;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  tag?: string;
+
+  @ApiProperty({ required: false, type: () => [ResourceDto] })
+  @IsOptional()
   @IsArray()
   resources?: ResourceDto[];
 }

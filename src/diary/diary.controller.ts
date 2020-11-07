@@ -9,6 +9,7 @@ import {
   ParseIntPipe,
   Param,
   Delete,
+  Patch,
 } from '@nestjs/common';
 import { Transform } from 'class-transformer';
 import {
@@ -18,7 +19,12 @@ import {
   ApiBearerAuth,
   ApiQuery,
 } from '@nestjs/swagger';
-import { CreateDiaryDto, SearchDiaryDto, ParamDiaryDto } from './diary.dto';
+import {
+  CreateDiaryDto,
+  SearchDiaryDto,
+  ParamDiaryDto,
+  EditDiaryDto,
+} from './diary.dto';
 import { AuthMeta } from 'src/auth/auth.decorator';
 import {
   DiariesResponse,
@@ -67,10 +73,36 @@ export class DiaryController {
     type: TransformResponse(DiaryResponse),
   })
   @UsePipes(new ValidationPipe({ transform: true }))
-  async getDiary(@Param() params: ParamDiaryDto): Promise<DiaryResponse> {
-    const res = await this.diaryService.getById(params.id);
+  async getDiary(
+    @Param() params: ParamDiaryDto,
+    @AuthMeta() user,
+  ): Promise<DiaryResponse> {
+    const res = await this.diaryService.getById(params.id, user.id);
     return {
       diary: res,
+    };
+  }
+
+  @Patch(['/:id'])
+  @ApiBearerAuth('Authorization')
+  @ApiResponse({
+    status: 200,
+    description: 'edit diary',
+    type: TransformResponse(OnlyId),
+  })
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async editDiary(
+    @Param() params: ParamDiaryDto,
+    @AuthMeta() user,
+    @Body() editDiaryDto: EditDiaryDto,
+  ): Promise<OnlyId> {
+    const updatedDiary = await this.diaryService.update(
+      params.id,
+      user.id,
+      editDiaryDto,
+    );
+    return {
+      id: updatedDiary,
     };
   }
 
@@ -82,8 +114,11 @@ export class DiaryController {
     type: TransformResponse(OnlyId),
   })
   @UsePipes(new ValidationPipe({ transform: true }))
-  async deleteDiary(@Param() params: ParamDiaryDto): Promise<OnlyId> {
-    const deletedDiary = await this.diaryService.deleteById(params.id);
+  async deleteDiary(
+    @Param() params: ParamDiaryDto,
+    @AuthMeta() user,
+  ): Promise<OnlyId> {
+    const deletedDiary = await this.diaryService.deleteById(params.id, user.id);
     return {
       id: deletedDiary,
     };
