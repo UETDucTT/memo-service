@@ -20,6 +20,11 @@ export enum Emotion {
   hate = 'hate',
 }
 
+export enum Status {
+  public = 'public',
+  private = 'private',
+}
+
 @Entity({ name: 'diary' })
 export class Diary {
   @PrimaryGeneratedColumn('uuid')
@@ -37,6 +42,13 @@ export class Diary {
     nullable: true,
   })
   emotion?: Emotion;
+
+  @Column({
+    type: 'enum',
+    enum: Status,
+    default: Status.private,
+  })
+  status: Status;
 
   @Column({ length: 255, nullable: true })
   tag?: string;

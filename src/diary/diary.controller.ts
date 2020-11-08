@@ -10,6 +10,7 @@ import {
   Param,
   Delete,
   Patch,
+  BadRequestException,
 } from '@nestjs/common';
 import { Transform } from 'class-transformer';
 import {
@@ -24,6 +25,7 @@ import {
   SearchDiaryDto,
   ParamDiaryDto,
   EditDiaryDto,
+  TriggerSandEmailDto,
 } from './diary.dto';
 import { AuthMeta } from 'src/auth/auth.decorator';
 import {
@@ -33,11 +35,16 @@ import {
   TransformResponse,
 } from './diary.model';
 import { DiaryService } from './diary.service';
+import { TaskService } from '../task/task.service';
+import { Status } from './diary.entity';
 
 @Controller('diaries')
 @ApiTags('Diary Action')
 export class DiaryController {
-  constructor(private diaryService: DiaryService) {}
+  constructor(
+    private diaryService: DiaryService,
+    private taskService: TaskService,
+  ) {}
 
   @Get([''])
   @ApiBearerAuth('Authorization')
@@ -80,6 +87,44 @@ export class DiaryController {
     const res = await this.diaryService.getById(params.id, user.id);
     return {
       diary: res,
+    };
+  }
+
+  @Get(['/public/:id'])
+  @ApiResponse({
+    status: 200,
+    description: 'get one diary public',
+    type: TransformResponse(DiaryResponse),
+  })
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async getDiaryPublic(@Param() params: ParamDiaryDto): Promise<DiaryResponse> {
+    const res = await this.diaryService.getPublicById(params.id);
+    return {
+      diary: res,
+    };
+  }
+
+  @Post(['/trigger-send-email'])
+  @ApiBearerAuth('Authorization')
+  @ApiResponse({
+    status: 200,
+    description: 'send email',
+    type: TransformResponse(TriggerSandEmailDto),
+  })
+  async triggerSendEmail(
+    @Body() triggleSendEmailDto: TriggerSandEmailDto,
+    @AuthMeta() user,
+  ): Promise<any> {
+    const diary = await this.diaryService.getById(
+      triggleSendEmailDto.id,
+      user.id,
+    );
+    if (diary.status !== Status.public) {
+      throw new BadRequestException('Diary non-public');
+    }
+    this.taskService.sendEmailShareDiary(diary, triggleSendEmailDto.emails);
+    return {
+      success: true,
     };
   }
 

@@ -10,9 +10,10 @@ import {
   IsOptional,
   IsDateString,
   IsUUID,
+  IsEmail,
 } from 'class-validator';
 import { Type } from 'src/resource/resource.entity';
-import { Emotion } from './diary.entity';
+import { Emotion, Status } from './diary.entity';
 
 export class ResourceDto {
   @ApiProperty()
@@ -56,6 +57,11 @@ export class CreateDiaryDto {
   @IsEnum(Emotion)
   emotion?: Emotion;
 
+  @ApiProperty({ enum: Status, default: Status.private })
+  @IsOptional()
+  @IsEnum(Status)
+  status: Status;
+
   @ApiProperty({ required: false })
   @IsString()
   @MaxLength(255)
@@ -82,6 +88,11 @@ export class EditDiaryDto {
   @IsOptional()
   @IsEnum(Emotion)
   emotion?: Emotion;
+
+  @ApiProperty({ enum: Status, default: Status.private })
+  @IsOptional()
+  @IsEnum(Status)
+  status: Status;
 
   @ApiProperty({ required: false })
   @IsOptional()
@@ -141,4 +152,15 @@ export class ParamDiaryDto {
   @ApiProperty({ required: false, default: 'id' })
   @IsUUID()
   id: string;
+}
+
+export class TriggerSandEmailDto {
+  @ApiProperty()
+  @IsDefined()
+  @IsUUID()
+  id: string;
+
+  @ApiProperty()
+  @IsEmail({}, { each: true })
+  emails: string[];
 }

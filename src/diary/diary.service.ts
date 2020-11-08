@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, Between } from 'typeorm';
 import { CreateDiaryDto, SearchDiaryDto, EditDiaryDto } from './diary.dto';
-import { Diary } from './diary.entity';
+import { Diary, Status } from './diary.entity';
 import { DiaryResource } from '../resource/resource.entity';
 import { User } from 'src/auth/auth.entity';
 import { addDays } from 'date-fns';
@@ -36,7 +36,9 @@ export class DiaryService {
     if (!diary) {
       throw new NotFoundException(`Diary with id ${id} not found`);
     }
-    diary.resources = [];
+    if (params.resources) {
+      diary.resources = [];
+    }
     this.diaryRepo.merge(diary, params);
     await this.diaryRepo.save(diary);
     return diary.id;
@@ -45,10 +47,22 @@ export class DiaryService {
   async getById(id: string, userId: string) {
     const diary = await this.diaryRepo.findOne({
       where: { id, user: { id: userId } },
-      relations: ['resources'],
+      relations: ['resources', 'user'],
     });
     if (!diary) {
       throw new NotFoundException(`Diary with id ${id} not found`);
+    }
+    return diary;
+  }
+
+  async getPublicById(id: string) {
+    const diary = await this.diaryRepo.findOne({
+      where: { id, status: Status.public },
+    });
+    if (!diary) {
+      throw new NotFoundException(
+        `Diary with id ${id} not found or non-public`,
+      );
     }
     return diary;
   }
