@@ -24,24 +24,31 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
     ScheduleModule.forRoot(),
     MailerModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        transport: {
-          host: configService.get<string>('service.mailHost'),
-          port: configService.get<number>('service.mailPort'),
-          secure: true,
-          auth: {
-            user: configService.get<string>('service.mailUser'),
-            pass: configService.get<string>('service.mailPass'),
+      useFactory: (configService: ConfigService) => {
+        const host = configService.get<string>('service.mailHost');
+        const port = configService.get<number>('service.mailPort');
+        const user = configService.get<string>('service.mailUser');
+        const pass = configService.get<string>('service.mailPass');
+
+        return {
+          transport: {
+            host,
+            port,
+            secure: true,
+            auth: {
+              user,
+              pass,
+            },
           },
-        },
-        template: {
-          dir: process.cwd() + '/template/',
-          adapter: new HandlebarsAdapter(),
-          options: {
-            strict: true,
+          template: {
+            dir: process.cwd() + '/template/',
+            adapter: new HandlebarsAdapter(),
+            options: {
+              strict: true,
+            },
           },
-        },
-      }),
+        };
+      },
       inject: [ConfigService],
     }),
   ],

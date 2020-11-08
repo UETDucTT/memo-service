@@ -27,7 +27,7 @@ export class TaskService {
         console.log(success);
       })
       .catch(err => {
-        console.log(err);
+        console.error(err);
       });
   }
 }
