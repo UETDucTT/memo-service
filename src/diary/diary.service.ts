@@ -58,6 +58,7 @@ export class DiaryService {
   async getPublicById(id: string) {
     const diary = await this.diaryRepo.findOne({
       where: { id, status: Status.public },
+      relations: ['resources', 'user'],
     });
     if (!diary) {
       throw new NotFoundException(
