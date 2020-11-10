@@ -1,0 +1,9 @@
+{
+  "apps": [
+    {
+      "name": "memo-api",
+      "script": "npm",
+      "args": "start:prod"
+    }
+  ]
+}
