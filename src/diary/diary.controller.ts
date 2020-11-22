@@ -11,6 +11,7 @@ import {
   Delete,
   Patch,
   BadRequestException,
+  ParseArrayPipe,
 } from '@nestjs/common';
 import { Transform } from 'class-transformer';
 import {
@@ -33,10 +34,11 @@ import {
   DiaryResponse,
   OnlyId,
   TransformResponse,
+  SummaryDiariesResponse,
 } from './diary.model';
 import { DiaryService } from './diary.service';
 import { TaskService } from '../task/task.service';
-import { Status } from './diary.entity';
+import { Emotion, Status } from './diary.entity';
 
 @Controller('diaries')
 @ApiTags('Diary Action')
@@ -45,6 +47,19 @@ export class DiaryController {
     private diaryService: DiaryService,
     private taskService: TaskService,
   ) {}
+
+  @Get(['/summary'])
+  @ApiBearerAuth('Authorization')
+  @ApiResponse({
+    status: 200,
+    description: 'get summary diaries',
+    type: TransformResponse(SummaryDiariesResponse),
+  })
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async getSummaryDiaries(@AuthMeta() user): Promise<SummaryDiariesResponse> {
+    const res = await this.diaryService.getSummaryDiaries(user.id);
+    return res;
+  }
 
   @Get([''])
   @ApiBearerAuth('Authorization')

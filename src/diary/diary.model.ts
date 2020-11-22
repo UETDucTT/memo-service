@@ -40,3 +40,8 @@ export class DiariesResponse {
 export class DiaryResponse {
   diary: DiaryItem;
 }
+
+export class SummaryDiariesResponse {
+  total: number;
+  today: number;
+}

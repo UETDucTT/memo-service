@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like, Between } from 'typeorm';
+import { Repository, Like, Between, In } from 'typeorm';
 import { CreateDiaryDto, SearchDiaryDto, EditDiaryDto } from './diary.dto';
 import { Diary, Status } from './diary.entity';
 import { DiaryResource } from '../resource/resource.entity';
@@ -23,6 +23,22 @@ export class DiaryService {
     @InjectRepository(Diary)
     private readonly diaryResourceRepo: Repository<DiaryResource>,
   ) {}
+
+  async getSummaryDiaries(userId: number) {
+    const totalDiaries = await this.diaryRepo.count({
+      where: { user: { id: userId } },
+    });
+    const totalDiariesToday = await this.diaryRepo.count({
+      where: {
+        user: { id: userId },
+        createdAt: Between(new Date(), addDays(new Date(), 1)),
+      },
+    });
+    return {
+      total: totalDiaries,
+      today: totalDiariesToday,
+    };
+  }
 
   async create(params: CreateDiaryDtoWithUser) {
     return await this.diaryRepo.save(params);
@@ -80,7 +96,7 @@ export class DiaryService {
   }
 
   buildParams(params: SearchDiaryDtoWithUser) {
-    let { page, pageSize, q, fromDate, toDate, user, lastId } = params;
+    let { page, pageSize, q, fromDate, toDate, user, lastId, ...rest } = params;
     if (!lastId && !page) {
       page = 1;
     }
@@ -88,6 +104,7 @@ export class DiaryService {
       pageSize = 10;
     }
     return {
+      ...rest,
       page,
       pageSize,
       q,
@@ -107,8 +124,26 @@ export class DiaryService {
       toDate,
       user,
       lastId,
+      emotion,
+      tag,
     } = this.buildParams(params);
     let betweenCondition = {};
+
+    let inCondition = {};
+
+    if (emotion) {
+      inCondition = {
+        ...inCondition,
+        emotion: In(emotion),
+      };
+    }
+    if (tag) {
+      inCondition = {
+        ...inCondition,
+        tag: In(tag),
+      };
+    }
+
     if (fromDate && toDate) {
       betweenCondition = {
         createdAt: Between(new Date(fromDate), new Date(toDate)),
@@ -130,6 +165,7 @@ export class DiaryService {
           },
           title: Like(`%${q || ''}%`),
           ...betweenCondition,
+          ...inCondition,
         },
         relations: ['resources'],
         skip: (page - 1) * pageSize,
@@ -143,6 +179,7 @@ export class DiaryService {
           },
           title: Like(`%${q || ''}%`),
           ...betweenCondition,
+          ...inCondition,
         },
         skip: page * pageSize,
         take: 1,
@@ -161,6 +198,7 @@ export class DiaryService {
           },
           title: Like(`%${q || ''}%`),
           ...betweenCondition,
+          ...inCondition,
         },
         order: { createdAt: 'DESC' },
       });
@@ -173,6 +211,7 @@ export class DiaryService {
             },
             title: Like(`%${q || ''}%`),
             ...betweenCondition,
+            ...inCondition,
           },
           relations: ['resources'],
           skip: idx + 1,
@@ -186,6 +225,7 @@ export class DiaryService {
             },
             title: Like(`%${q || ''}%`),
             ...betweenCondition,
+            ...inCondition,
           },
           skip: idx + 1 + pageSize,
           take: 1,
@@ -204,6 +244,7 @@ export class DiaryService {
             },
             title: Like(`%${q || ''}%`),
             ...betweenCondition,
+            ...inCondition,
           },
           relations: ['resources'],
           skip: 0,
@@ -217,6 +258,7 @@ export class DiaryService {
             },
             title: Like(`%${q || ''}%`),
             ...betweenCondition,
+            ...inCondition,
           },
           skip: pageSize,
           take: 1,

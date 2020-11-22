@@ -112,6 +112,32 @@ export class SearchDiaryDto {
   @IsOptional()
   q: string;
 
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsEnum(Emotion, { each: true })
+  @Transform(val => {
+    if (val) {
+      if (!Array.isArray(val)) {
+        return [val];
+      }
+    }
+    return val;
+  })
+  emotion: string[];
+
+  @ApiProperty({ required: false })
+  @IsString({ each: true })
+  @IsOptional()
+  @Transform(val => {
+    if (val) {
+      if (!Array.isArray(val)) {
+        return [val];
+      }
+    }
+    return val;
+  })
+  tag: string[];
+
   @ApiProperty({ required: false, default: 1 })
   @IsOptional()
   @Transform(val => {
