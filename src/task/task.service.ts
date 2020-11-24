@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { Interval } from '@nestjs/schedule';
 import { NotificationGateway } from 'src/notification/notification.gateway';
 import { AuthService } from 'src/auth/auth.service';
+import { In } from 'typeorm';
 
 @Injectable()
 export class TaskService {
@@ -30,7 +31,7 @@ export class TaskService {
       })
       .then(async success => {
         const users = await this.userService.find({
-          where: { email: { in: emails } },
+          where: { email: In(emails) },
         });
         if (users && users[0]) {
           this.notificationGateway.sendToUser(
