@@ -61,4 +61,8 @@ export class AuthService {
   async findOne(condition: any): Promise<User> {
     return await this.authRepo.findOne(condition);
   }
+
+  async find(condition: any): Promise<User[]> {
+    return await this.authRepo.find(condition);
+  }
 }

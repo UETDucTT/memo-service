@@ -10,6 +10,7 @@ import { ResourceModule } from './resource/resource.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
     ConfigModule.forRoot({
       load: [serviceConfig, identityConfig],
     }),
+    // NotificationModule,
     HealthModule,
     AuthModule,
     DiaryModule,
