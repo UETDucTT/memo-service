@@ -10,7 +10,6 @@ import { ResourceModule } from './resource/resource.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
-import { NotificationModule } from './notification/notification.module';
 import { NotificationGateway } from './notification/notification.gateway';
 
 @Module({

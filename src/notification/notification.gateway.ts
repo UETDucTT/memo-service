@@ -1,47 +1,35 @@
 import {
-  MessageBody,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
-  OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
+  OnGatewayInit,
   WebSocketServer,
-  WsResponse,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
-import { Client, Server, Socket } from 'socket.io';
+import { Socket, Server } from 'socket.io';
 
 @WebSocketGateway()
 export class NotificationGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
-  @WebSocketServer() wss: Server;
-  private logger: Logger = new Logger('NotificationGateway');
+  @WebSocketServer() server: Server;
+  private logger: Logger = new Logger('AppGateway');
 
-  afterInit(server: any) {
-    this.logger.log('init');
+  @SubscribeMessage('msgToServer')
+  handleMessage(client: Socket, payload: string): void {
+    console.log(client);
+    this.server.emit('msgToClient', payload);
   }
 
-  handleConnection(client: Socket, ...args: any[]) {
-    this.logger.warn('connect', client.id);
+  afterInit(server: Server) {
+    this.logger.log('Init');
   }
 
   handleDisconnect(client: Socket) {
-    this.logger.error('disconnect', client.id);
+    this.logger.log(`Client disconnected: ${client.id}`);
   }
 
-  // @SubscribeMessage('userJoin')
-  // connectUser(client: Socket, userId: string) {
-  //   console.log(userId);
-  //   client.join(userId);
-  //   client.emit('userJoin', userId);
-  // }
-
-  @SubscribeMessage('ductt')
-  connectUser1(data: any) {
-    console.log(data);
-  }
-
-  sendToUser(userId: string, data: any) {
-    this.wss.to(userId).emit('push_noti', data);
+  handleConnection(client: Socket, ...args: any[]) {
+    this.logger.log(`Client connected: ${client.id}`);
   }
 }
