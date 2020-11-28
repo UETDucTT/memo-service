@@ -11,6 +11,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { NotificationModule } from './notification/notification.module';
+import { NotificationGateway } from './notification/notification.gateway';
 
 @Module({
   imports: [
@@ -54,6 +55,6 @@ import { NotificationModule } from './notification/notification.module';
       inject: [ConfigService],
     }),
   ],
-  providers: [ConfigService],
+  providers: [ConfigService, NotificationGateway],
 })
 export class AppModule {}

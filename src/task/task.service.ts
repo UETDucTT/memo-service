@@ -3,7 +3,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { Diary } from 'src/diary/diary.entity';
 import { ConfigService } from '@nestjs/config';
 import { Interval } from '@nestjs/schedule';
-import { NotificationGateway } from 'src/notification/notification.gateway';
+// import { NotificationGateway } from 'src/notification/notification.gateway';
 import { AuthService } from 'src/auth/auth.service';
 import { In } from 'typeorm';
 
@@ -12,7 +12,7 @@ export class TaskService {
   constructor(
     private readonly mailerService: MailerService,
     private readonly userService: AuthService,
-    private readonly notificationGateway: NotificationGateway,
+    // private readonly notificationGateway: NotificationGateway,
     private config: ConfigService,
   ) {}
   sendEmailShareDiary(diary: Diary, emails: string[]) {
@@ -30,15 +30,15 @@ export class TaskService {
         template: 'shareDiary',
       })
       .then(async success => {
-        const users = await this.userService.find({
-          where: { email: In(emails) },
-        });
-        if (users && users[0]) {
-          this.notificationGateway.sendToUser(
-            users[0].id.toString(),
-            `${diary.user.name} đã mời bạn xem nhật ký của anh (cô) ấy`,
-          );
-        }
+        // const users = await this.userService.find({
+        //   where: { email: In(emails) },
+        // });
+        // if (users && users[0]) {
+        //   this.notificationGateway.sendToUser(
+        //     users[0].id.toString(),
+        //     `${diary.user.name} đã mời bạn xem nhật ký của anh (cô) ấy`,
+        //   );
+        // }
         console.log(success);
       })
       .catch(err => {
