@@ -25,12 +25,12 @@ import { TaskModule } from 'src/task/task.module';
 })
 export class DiaryModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    // consumer
-    //   .apply(IdentityMiddleware)
-    //   .exclude({
-    //     path: 'diaries/public/:id',
-    //     method: RequestMethod.GET,
-    //   })
-    //   .forRoutes(DiaryController);
+    consumer
+      .apply(IdentityMiddleware)
+      .exclude({
+        path: 'diaries/public/:id',
+        method: RequestMethod.GET,
+      })
+      .forRoutes(DiaryController);
   }
 }

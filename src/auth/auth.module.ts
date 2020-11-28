@@ -14,6 +14,6 @@ import { IdentityMiddleware } from 'src/identity/identity.middleware';
 })
 export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    // consumer.apply(IdentityMiddleware).forRoutes('auth/me');
+    consumer.apply(IdentityMiddleware).forRoutes('auth/me');
   }
 }
