@@ -137,7 +137,10 @@ export class DiaryController {
     if (diary.status !== Status.public) {
       throw new BadRequestException('Diary non-public');
     }
-    this.taskService.sendEmailShareDiary(diary, triggleSendEmailDto.emails);
+    this.taskService.sendEmailShareDiary(
+      diary,
+      triggleSendEmailDto.emails.filter(el => el !== user.email),
+    );
     return {
       success: true,
     };

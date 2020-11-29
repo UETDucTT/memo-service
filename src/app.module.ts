@@ -10,7 +10,7 @@ import { ResourceModule } from './resource/resource.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
-import { NotificationGateway } from './notification/notification.gateway';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -18,7 +18,7 @@ import { NotificationGateway } from './notification/notification.gateway';
     ConfigModule.forRoot({
       load: [serviceConfig, identityConfig],
     }),
-    // NotificationModule,
+    NotificationModule,
     HealthModule,
     AuthModule,
     DiaryModule,
@@ -54,6 +54,6 @@ import { NotificationGateway } from './notification/notification.gateway';
       inject: [ConfigService],
     }),
   ],
-  providers: [ConfigService, NotificationGateway],
+  providers: [ConfigService],
 })
 export class AppModule {}
