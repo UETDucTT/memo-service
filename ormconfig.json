@@ -5,10 +5,14 @@
   "username": "root",
   "password": "ductt97",
   "database": "memo",
-  "entities": ["dist/**/*.entity.js"],
-  "migrations": ["dist/migration/*.js"],
+  "entities": [
+    "dist/**/*.entity.js"
+  ],
+  "migrations": [
+    "dist/migration/*.js"
+  ],
   "cli": {
-      "migrationsDir": "src/migration"
+    "migrationsDir": "src/migration"
   },
   "charset": "utf8mb4"
 }

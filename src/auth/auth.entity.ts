@@ -48,6 +48,16 @@ export class User {
   @Expose()
   picture: string;
 
+  @Column({ nullable: true })
+  @ApiProperty()
+  @Expose()
+  gender?: string;
+
+  @Column({ nullable: true })
+  @ApiProperty()
+  @Expose()
+  birthday?: Date;
+
   @CreateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP(6)',

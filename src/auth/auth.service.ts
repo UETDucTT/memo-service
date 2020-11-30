@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { OAuth2Client } from 'google-auth-library';
 import { Repository } from 'typeorm';
 import { IdentityService } from '../identity/identity.service';
-import { GetSampleTokenDto } from './auth.dto';
+import { GetSampleTokenDto, UpdateProfileDto } from './auth.dto';
 import { User } from './auth.entity';
 
 @Injectable()
@@ -64,5 +64,9 @@ export class AuthService {
 
   async find(condition: any): Promise<User[]> {
     return await this.authRepo.find(condition);
+  }
+
+  async update(id: number, params: UpdateProfileDto) {
+    return await this.authRepo.update({ id }, params);
   }
 }

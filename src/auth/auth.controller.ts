@@ -5,18 +5,20 @@ import {
   HttpException,
   HttpStatus,
   Get,
+  Patch,
 } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { TransformResponse, SystemToken, IDToken } from './auth.model';
 import { AuthMeta } from './auth.decorator';
-import { GetSampleTokenDto } from './auth.dto';
+import { GetSampleTokenDto, UpdateProfileDto } from './auth.dto';
 import { User } from './auth.entity';
+import { OnlyId } from 'src/diary/diary.model';
 
 @Controller('auth')
 @ApiTags('Auth management')
 export class AuthController {
-  constructor(private authService: AuthService) { }
+  constructor(private authService: AuthService) {}
 
   @Post(['get-token'])
   @ApiResponse({
@@ -69,5 +71,22 @@ export class AuthController {
   })
   getMe(@AuthMeta() user): User {
     return user;
+  }
+
+  @Patch(['me/update'])
+  @ApiBearerAuth('Authorization')
+  @ApiResponse({
+    status: 200,
+    description: 'User info',
+    type: TransformResponse(OnlyId),
+  })
+  async updateProfile(
+    @AuthMeta() user,
+    @Body() req: UpdateProfileDto,
+  ): Promise<OnlyId> {
+    await this.authService.update(user.id, req);
+    return {
+      id: user.id,
+    };
   }
 }

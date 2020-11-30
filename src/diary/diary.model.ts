@@ -23,7 +23,7 @@ export function TransformResponse<T extends ClassType>(ResourceCls: T): any {
 export class OnlyId {
   @ApiProperty()
   @Expose()
-  id: string;
+  id: string | number;
 }
 
 type Resource = Omit<DiaryResource, 'createdAt' | 'updatedAt'>;
