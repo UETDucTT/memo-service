@@ -20,7 +20,6 @@ export class DiaryService {
   constructor(
     @InjectRepository(Diary)
     private readonly diaryRepo: Repository<Diary>,
-    @InjectRepository(Diary)
     private readonly tagService: TagService,
   ) {}
 

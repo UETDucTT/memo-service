@@ -12,6 +12,7 @@ import {
   IsUUID,
   IsEmail,
   isUUID,
+  IsDate,
 } from 'class-validator';
 import { Type } from 'src/resource/resource.entity';
 import { Emotion, Status } from './diary.entity';
@@ -70,6 +71,11 @@ export class CreateDiaryDto {
   @ApiProperty({ required: false, type: () => [ResourceDto] })
   @IsArray()
   resources?: ResourceDto[];
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsDateString()
+  time: Date;
 }
 
 export class EditDiaryDto {
@@ -104,6 +110,11 @@ export class EditDiaryDto {
   @IsOptional()
   @IsArray()
   resources?: ResourceDto[];
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsDateString()
+  time: Date;
 }
 
 export class SearchDiaryDto {
