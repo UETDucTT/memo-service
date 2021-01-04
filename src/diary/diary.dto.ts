@@ -11,6 +11,7 @@ import {
   IsDateString,
   IsUUID,
   IsEmail,
+  isUUID,
 } from 'class-validator';
 import { Type } from 'src/resource/resource.entity';
 import { Emotion, Status } from './diary.entity';
@@ -63,9 +64,8 @@ export class CreateDiaryDto {
   status: Status;
 
   @ApiProperty({ required: false })
-  @IsString()
-  @MaxLength(255)
-  tag?: string;
+  @IsUUID()
+  tagId: string;
 
   @ApiProperty({ required: false, type: () => [ResourceDto] })
   @IsArray()
@@ -96,9 +96,9 @@ export class EditDiaryDto {
 
   @ApiProperty({ required: false })
   @IsOptional()
-  @IsString()
+  @IsUUID()
   @MaxLength(255)
-  tag?: string;
+  tagId: string;
 
   @ApiProperty({ required: false, type: () => [ResourceDto] })
   @IsOptional()

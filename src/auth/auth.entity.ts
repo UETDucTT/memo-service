@@ -10,6 +10,7 @@ import { Expose } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { Diary } from '../diary/diary.entity';
 import { Notification } from '../notification/notification.entity';
+import { Tag } from 'src/tag/tag.entity';
 
 @Entity()
 export class User {
@@ -77,6 +78,13 @@ export class User {
     { cascade: true },
   )
   diaries: Diary[];
+
+  @OneToMany(
+    () => Tag,
+    tag => tag.user,
+    { cascade: true },
+  )
+  tags: Tag[];
 
   @OneToMany(
     () => Notification,

@@ -11,6 +11,7 @@ import { User } from '../auth/auth.entity';
 import { DiaryResource } from '../resource/resource.entity';
 import { Expose } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import { Tag } from 'src/tag/tag.entity';
 
 export enum Emotion {
   excellent = 'excellent',
@@ -50,8 +51,11 @@ export class Diary {
   })
   status: Status;
 
-  @Column({ length: 255, nullable: true })
-  tag?: string;
+  @Column({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
+  time: Date;
 
   @CreateDateColumn({
     type: 'timestamp',
@@ -79,4 +83,11 @@ export class Diary {
     { cascade: true },
   )
   resources: DiaryResource[];
+
+  @ManyToOne(
+    () => Tag,
+    tag => tag.diaries,
+    { onDelete: 'SET NULL' },
+  )
+  tag: Tag;
 }

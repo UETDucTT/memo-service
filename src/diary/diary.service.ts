@@ -3,9 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, Between, In } from 'typeorm';
 import { CreateDiaryDto, SearchDiaryDto, EditDiaryDto } from './diary.dto';
 import { Diary, Status } from './diary.entity';
-import { DiaryResource } from '../resource/resource.entity';
 import { User } from 'src/auth/auth.entity';
-import { addDays } from 'date-fns';
+import { addDays, maxTime } from 'date-fns';
+import { TagService } from 'src/tag/tag.service';
 
 type CreateDiaryDtoWithUser = CreateDiaryDto & {
   user: User;
@@ -21,7 +21,7 @@ export class DiaryService {
     @InjectRepository(Diary)
     private readonly diaryRepo: Repository<Diary>,
     @InjectRepository(Diary)
-    private readonly diaryResourceRepo: Repository<DiaryResource>,
+    private readonly tagService: TagService,
   ) {}
 
   async getSummaryDiaries(userId: number) {
@@ -31,7 +31,7 @@ export class DiaryService {
     const totalDiariesToday = await this.diaryRepo.count({
       where: {
         user: { id: userId },
-        createdAt: Between(new Date(), addDays(new Date(), 1)),
+        time: Between(new Date(), addDays(new Date(), 1)),
       },
     });
     return {
@@ -41,21 +41,47 @@ export class DiaryService {
   }
 
   async create(params: CreateDiaryDtoWithUser) {
-    return await this.diaryRepo.save(params);
+    const { tagId, ...rest } = params;
+    const diary = new Diary();
+    if (tagId === null || tagId) {
+      const currTag = await this.tagService.getTag({ id: tagId });
+      if (tagId && !currTag) {
+        throw new NotFoundException(`Tag with id ${tagId} not found`);
+      }
+      if (currTag) {
+        diary.tag = currTag;
+      } else {
+        diary.tag = null;
+      }
+    }
+    this.diaryRepo.merge(diary, rest);
+    return await this.diaryRepo.save(diary);
   }
 
   async update(id: string, userId: string, params: EditDiaryDto) {
+    const { tagId, ...rest } = params;
     const diary = await this.diaryRepo.findOne({
       where: { id, user: { id: userId } },
-      relations: ['resources'],
+      relations: ['resources', 'tag'],
     });
     if (!diary) {
       throw new NotFoundException(`Diary with id ${id} not found`);
     }
-    if (params.resources) {
+    if (rest.resources) {
       diary.resources = [];
     }
-    this.diaryRepo.merge(diary, params);
+    if (tagId === null || tagId) {
+      const currTag = await this.tagService.getTag({ id: tagId });
+      if (tagId && !currTag) {
+        throw new NotFoundException(`Tag with id ${tagId} not found`);
+      }
+      if (currTag) {
+        diary.tag = currTag;
+      } else {
+        diary.tag = null;
+      }
+    }
+    this.diaryRepo.merge(diary, rest);
     await this.diaryRepo.save(diary);
     return diary.id;
   }
@@ -63,7 +89,7 @@ export class DiaryService {
   async getById(id: string, userId: string) {
     const diary = await this.diaryRepo.findOne({
       where: { id, user: { id: userId } },
-      relations: ['resources', 'user'],
+      relations: ['resources', 'user', 'tag'],
     });
     if (!diary) {
       throw new NotFoundException(`Diary with id ${id} not found`);
@@ -74,7 +100,7 @@ export class DiaryService {
   async getPublicById(id: string) {
     const diary = await this.diaryRepo.findOne({
       where: { id, status: Status.public },
-      relations: ['resources', 'user'],
+      relations: ['resources', 'user', 'tag'],
     });
     if (!diary) {
       throw new NotFoundException(
@@ -146,15 +172,15 @@ export class DiaryService {
 
     if (fromDate && toDate) {
       betweenCondition = {
-        createdAt: Between(new Date(fromDate), new Date(toDate)),
+        time: Between(new Date(fromDate), new Date(toDate)),
       };
     } else if (fromDate) {
       betweenCondition = {
-        createdAt: Between(new Date(fromDate), addDays(new Date(), 1)),
+        time: Between(new Date(fromDate), new Date(maxTime)),
       };
     } else if (toDate) {
       betweenCondition = {
-        createdAt: Between(new Date(0), new Date(toDate)),
+        time: Between(new Date(0), new Date(toDate)),
       };
     }
     if (page) {
@@ -167,7 +193,7 @@ export class DiaryService {
           ...betweenCondition,
           ...inCondition,
         },
-        relations: ['resources'],
+        relations: ['resources', 'tag'],
         skip: (page - 1) * pageSize,
         take: pageSize,
         order: { createdAt: 'DESC' },
@@ -213,7 +239,7 @@ export class DiaryService {
             ...betweenCondition,
             ...inCondition,
           },
-          relations: ['resources'],
+          relations: ['resources', 'tag'],
           skip: idx + 1,
           take: pageSize,
           order: { createdAt: 'DESC' },
@@ -246,7 +272,7 @@ export class DiaryService {
             ...betweenCondition,
             ...inCondition,
           },
-          relations: ['resources'],
+          relations: ['resources', 'tags'],
           skip: 0,
           take: pageSize,
           order: { createdAt: 'DESC' },

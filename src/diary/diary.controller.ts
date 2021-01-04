@@ -6,20 +6,16 @@ import {
   UsePipes,
   ValidationPipe,
   Query,
-  ParseIntPipe,
   Param,
   Delete,
   Patch,
   BadRequestException,
-  ParseArrayPipe,
 } from '@nestjs/common';
-import { Transform } from 'class-transformer';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
-  ApiQuery,
 } from '@nestjs/swagger';
 import {
   CreateDiaryDto,
@@ -38,7 +34,8 @@ import {
 } from './diary.model';
 import { DiaryService } from './diary.service';
 import { TaskService } from '../task/task.service';
-import { Emotion, Status } from './diary.entity';
+import { Status } from './diary.entity';
+import { Tag } from 'src/tag/tag.entity';
 
 @Controller('diaries')
 @ApiTags('Diary Action')

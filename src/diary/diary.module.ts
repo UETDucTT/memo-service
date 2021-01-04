@@ -12,6 +12,7 @@ import { AuthModule } from 'src/auth/auth.module';
 import { DiaryController } from './diary.controller';
 import { DiaryService } from './diary.service';
 import { TaskModule } from 'src/task/task.module';
+import { TagModule } from 'src/tag/tag.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { TaskModule } from 'src/task/task.module';
     IdentityModule,
     AuthModule,
     TaskModule,
+    TagModule,
   ],
   controllers: [DiaryController],
   providers: [DiaryService],

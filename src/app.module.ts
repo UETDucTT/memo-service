@@ -12,6 +12,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { NotificationModule } from './notification/notification.module';
 import { PreviewLinkModule } from './link-preview/link-preview.module';
+import { TagModule } from './tag/tag.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { PreviewLinkModule } from './link-preview/link-preview.module';
     DiaryModule,
     ResourceModule,
     PreviewLinkModule,
+    TagModule,
     ScheduleModule.forRoot(),
     MailerModule.forRootAsync({
       imports: [ConfigModule],
