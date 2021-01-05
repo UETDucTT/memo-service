@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import { User } from 'src/auth/auth.entity';
 import { CreateTagDto, EditTagDto } from './tag.dto';
 
-type CreateTagDtoWithUser = CreateTagDto & {
+export type CreateTagDtoWithUser = CreateTagDto & {
   user: User;
 };
 
