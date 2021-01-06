@@ -44,6 +44,34 @@ export class ResourceDto {
   note: string;
 }
 
+export class LinkDto {
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  @IsUUID()
+  id: string;
+
+  @ApiProperty()
+  @IsDefined()
+  @IsString()
+  url: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  image: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  title: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  description: string;
+}
+
 export class CreateDiaryDto {
   @ApiProperty()
   @IsDefined()
@@ -71,6 +99,10 @@ export class CreateDiaryDto {
   @ApiProperty({ required: false, type: () => [ResourceDto] })
   @IsArray()
   resources?: ResourceDto[];
+
+  @ApiProperty({ required: false, type: () => [LinkDto] })
+  @IsArray()
+  links?: LinkDto[];
 
   @ApiProperty({ required: false })
   @IsOptional()
@@ -110,6 +142,11 @@ export class EditDiaryDto {
   @IsOptional()
   @IsArray()
   resources?: ResourceDto[];
+
+  @ApiProperty({ required: false, type: () => [LinkDto] })
+  @IsOptional()
+  @IsArray()
+  links?: LinkDto[];
 
   @ApiProperty({ required: false })
   @IsOptional()

@@ -12,6 +12,7 @@ import { DiaryResource } from '../resource/resource.entity';
 import { Expose } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { Tag } from 'src/tag/tag.entity';
+import { Link } from 'src/link-preview/link-preview.entity';
 
 export enum Emotion {
   excellent = 'excellent',
@@ -83,6 +84,13 @@ export class Diary {
     { cascade: true },
   )
   resources: DiaryResource[];
+
+  @OneToMany(
+    () => Link,
+    link => link.diary,
+    { cascade: true },
+  )
+  links: Link[];
 
   @ManyToOne(
     () => Tag,

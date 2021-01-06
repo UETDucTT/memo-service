@@ -61,7 +61,7 @@ export class DiaryService {
     const { tagId, ...rest } = params;
     const diary = await this.diaryRepo.findOne({
       where: { id, user: { id: userId } },
-      relations: ['resources', 'tag'],
+      relations: ['resources', 'tag', 'links'],
     });
     if (!diary) {
       throw new NotFoundException(`Diary with id ${id} not found`);
@@ -69,6 +69,11 @@ export class DiaryService {
     if (rest.resources) {
       diary.resources = [];
     }
+
+    if (rest.links) {
+      diary.links = [];
+    }
+
     if (tagId === null || tagId) {
       const currTag = await this.tagService.getTag({ id: tagId });
       if (tagId && !currTag) {
@@ -88,7 +93,7 @@ export class DiaryService {
   async getById(id: string, userId: string) {
     const diary = await this.diaryRepo.findOne({
       where: { id, user: { id: userId } },
-      relations: ['resources', 'user', 'tag'],
+      relations: ['resources', 'user', 'tag', 'links'],
     });
     if (!diary) {
       throw new NotFoundException(`Diary with id ${id} not found`);
@@ -99,7 +104,7 @@ export class DiaryService {
   async getPublicById(id: string) {
     const diary = await this.diaryRepo.findOne({
       where: { id, status: Status.public },
-      relations: ['resources', 'user', 'tag'],
+      relations: ['resources', 'user', 'tag', 'links'],
     });
     if (!diary) {
       throw new NotFoundException(
@@ -192,7 +197,7 @@ export class DiaryService {
           ...betweenCondition,
           ...inCondition,
         },
-        relations: ['resources', 'tag'],
+        relations: ['resources', 'tag', 'links'],
         skip: (page - 1) * pageSize,
         take: pageSize,
         order: { createdAt: 'DESC' },
@@ -238,7 +243,7 @@ export class DiaryService {
             ...betweenCondition,
             ...inCondition,
           },
-          relations: ['resources', 'tag'],
+          relations: ['resources', 'tag', 'links'],
           skip: idx + 1,
           take: pageSize,
           order: { createdAt: 'DESC' },
@@ -271,7 +276,7 @@ export class DiaryService {
             ...betweenCondition,
             ...inCondition,
           },
-          relations: ['resources', 'tags'],
+          relations: ['resources', 'tags', 'links'],
           skip: 0,
           take: pageSize,
           order: { createdAt: 'DESC' },
