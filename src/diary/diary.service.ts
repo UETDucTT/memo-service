@@ -23,9 +23,41 @@ export class DiaryService {
     private readonly tagService: TagService,
   ) {}
 
-  async getSummaryDiaries(userId: number) {
+  async getSummaryDiaries(userId: number, params: SearchDiaryDto) {
+    const { q, fromDate, toDate, tag } = params;
+    let betweenCondition = {};
+
+    let inCondition = {};
+
+    if (tag) {
+      inCondition = {
+        ...inCondition,
+        tag: In(tag),
+      };
+    }
+    if (fromDate && toDate) {
+      betweenCondition = {
+        time: Between(new Date(fromDate), new Date(toDate)),
+      };
+    } else if (fromDate) {
+      betweenCondition = {
+        time: Between(new Date(fromDate), new Date(maxTime)),
+      };
+    } else if (toDate) {
+      betweenCondition = {
+        time: Between(new Date(0), new Date(toDate)),
+      };
+    }
+
     const totalDiaries = await this.diaryRepo.count({
       where: { user: { id: userId } },
+    });
+    const currentDiaries = await this.diaryRepo.count({
+      where: {
+        user: { id: userId },
+        ...betweenCondition,
+        ...inCondition,
+      },
     });
     const totalDiariesToday = await this.diaryRepo.count({
       where: {
@@ -35,6 +67,7 @@ export class DiaryService {
     });
     return {
       total: totalDiaries,
+      current: currentDiaries,
       today: totalDiariesToday,
     };
   }

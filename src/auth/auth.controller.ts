@@ -13,7 +13,7 @@ import { TransformResponse, SystemToken, IDToken } from './auth.model';
 import { AuthMeta } from './auth.decorator';
 import { GetSampleTokenDto, UpdateProfileDto } from './auth.dto';
 import { User } from './auth.entity';
-import { OnlyId } from 'src/diary/diary.model';
+import { OnlyId, UserOverviewResponse } from 'src/diary/diary.model';
 
 @Controller('auth')
 @ApiTags('Auth management')
@@ -71,6 +71,24 @@ export class AuthController {
   })
   getMe(@AuthMeta() user): User {
     return user;
+  }
+
+  @Get(['/all-users'])
+  @ApiBearerAuth('Authorization')
+  @ApiResponse({
+    status: 200,
+    description: 'Get all user',
+    type: TransformResponse(UserOverviewResponse),
+  })
+  async getAllUsers(@AuthMeta() _user): Promise<UserOverviewResponse> {
+    const users = await this.authService.getAllUser();
+    return {
+      users: users.map(el => ({
+        id: el.id,
+        name: el.name,
+        email: el.email,
+      })),
+    };
   }
 
   @Patch(['me/update'])

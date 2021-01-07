@@ -83,4 +83,8 @@ export class AuthService {
   async update(id: number, params: UpdateProfileDto) {
     return await this.authRepo.update({ id }, params);
   }
+
+  async getAllUser() {
+    return await this.authRepo.find();
+  }
 }

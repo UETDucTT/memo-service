@@ -45,3 +45,13 @@ export class SummaryDiariesResponse {
   total: number;
   today: number;
 }
+
+export class UserOverview {
+  id: number;
+  email: string;
+  name: string;
+}
+
+export class UserOverviewResponse {
+  users: UserOverview[];
+}

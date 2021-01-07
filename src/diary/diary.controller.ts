@@ -53,8 +53,11 @@ export class DiaryController {
     type: TransformResponse(SummaryDiariesResponse),
   })
   @UsePipes(new ValidationPipe({ transform: true }))
-  async getSummaryDiaries(@AuthMeta() user): Promise<SummaryDiariesResponse> {
-    const res = await this.diaryService.getSummaryDiaries(user.id);
+  async getSummaryDiaries(
+    @AuthMeta() user,
+    @Query() dto: SearchDiaryDto,
+  ): Promise<SummaryDiariesResponse> {
+    const res = await this.diaryService.getSummaryDiaries(user.id, dto);
     return res;
   }
 
