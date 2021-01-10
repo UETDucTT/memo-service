@@ -36,18 +36,18 @@ export class AuthService {
 
   async loginGoogle(token?: string) {
     const ticket = await this.client.verifyIdToken({ idToken: token });
+    const {
+      email,
+      name,
+      picture,
+      sub,
+      given_name: givenName,
+      family_name: familyName,
+    } = ticket.getPayload();
     const user = await this.authRepo.findOne({
-      where: { sub: ticket.getUserId() },
+      where: [{ sub: ticket.getUserId() }, { email }],
     });
     if (!user) {
-      const {
-        email,
-        name,
-        picture,
-        sub,
-        given_name: givenName,
-        family_name: familyName,
-      } = ticket.getPayload();
       const newUser = await this.authRepo.save({
         email,
         name,
@@ -68,6 +68,16 @@ export class AuthService {
       })) as CreateTagDtoWithUser[];
       await Promise.all(newTags.map(el => this.tagService.create(el)));
       return this.identityService.generateUserToken(newUser.id);
+    }
+    if (!user.sub) {
+      await this.authRepo.save({
+        ...user,
+        sub: ticket.getUserId(),
+        givenName,
+        familyName,
+        picture: user.picture ? user.picture : picture,
+        name: user.name ? user.name : name,
+      });
     }
     return this.identityService.generateUserToken(user.id);
   }
