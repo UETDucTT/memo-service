@@ -5,8 +5,9 @@ import {
   OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
+  BeforeInsert,
 } from 'typeorm';
-import { Expose } from 'class-transformer';
+import { Expose, Exclude } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { Diary } from '../diary/diary.entity';
 import { Notification } from '../notification/notification.entity';
@@ -19,32 +20,43 @@ export class User {
   @Expose()
   id: number;
 
-  @Column({ length: 32 })
+  @Column({ length: 32, nullable: true })
   @ApiProperty()
   @Expose()
-  sub: string;
+  sub?: string;
+
+  @Column({ length: 255, nullable: true })
+  @ApiProperty()
+  @Expose()
+  username?: string;
+
+  @Column({ length: 255, nullable: true })
+  @ApiProperty({ writeOnly: true })
+  @Expose()
+  @Exclude()
+  password?: string;
 
   @Column({ length: 255 })
   @ApiProperty()
   @Expose()
   email: string;
 
-  @Column({ length: 255 })
+  @Column({ length: 255, nullable: true })
   @ApiProperty()
   @Expose()
-  name: string;
+  name?: string;
 
-  @Column({ length: 255 })
+  @Column({ length: 255, nullable: true })
   @ApiProperty()
   @Expose()
-  givenName: string;
+  givenName?: string;
 
-  @Column({ length: 255 })
+  @Column({ length: 255, nullable: true })
   @ApiProperty()
   @Expose()
   familyName: string;
 
-  @Column({ length: 255 })
+  @Column({ length: 255, nullable: true })
   @ApiProperty()
   @Expose()
   picture: string;

@@ -3,25 +3,16 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Diary } from './diary.entity';
 import { DiaryResource } from 'src/resource/resource.entity';
 import { PaginationResponse } from 'src/types';
+import { User } from 'src/auth/auth.entity';
 
 export type ClassType<T = any> = new (...args: any[]) => T;
 
 export function TransformResponse<T extends ClassType>(ResourceCls: T): any {
-  class Response {
-    @ApiProperty({ description: 'Result', type: ResourceCls })
-    result: T;
-
-    @ApiProperty({ description: 'Status code' })
-    statusCode?: number;
-
-    @ApiProperty()
-    error?: string;
-  }
-  return Response;
+  return ResourceCls;
 }
 
 export class OnlyId {
-  @ApiProperty()
+  @ApiProperty({ type: 'string' })
   @Expose()
   id: string | number;
 }
@@ -38,11 +29,22 @@ export class DiariesResponse {
 }
 
 export class DiaryResponse {
+  @ApiProperty()
+  @Expose()
   diary: DiaryItem;
 }
 
 export class SummaryDiariesResponse {
+  @ApiProperty({ type: 'number' })
+  @Expose()
   total: number;
+
+  @ApiProperty({ type: 'number' })
+  @Expose()
+  current: number;
+
+  @ApiProperty({ type: 'number' })
+  @Expose()
   today: number;
 }
 
@@ -53,5 +55,7 @@ export class UserOverview {
 }
 
 export class UserOverviewResponse {
-  users: UserOverview[];
+  @ApiProperty({ type: () => [User] })
+  @Expose()
+  users: User[];
 }

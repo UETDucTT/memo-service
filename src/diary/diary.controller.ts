@@ -10,6 +10,7 @@ import {
   Delete,
   Patch,
   BadRequestException,
+  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -35,10 +36,11 @@ import {
 import { DiaryService } from './diary.service';
 import { TaskService } from '../task/task.service';
 import { Status } from './diary.entity';
-import { Tag } from 'src/tag/tag.entity';
+import { TransformInterceptor } from './transform.inteceptor';
 
 @Controller('diaries')
 @ApiTags('Diary Action')
+@UseInterceptors(new TransformInterceptor())
 export class DiaryController {
   constructor(
     private diaryService: DiaryService,

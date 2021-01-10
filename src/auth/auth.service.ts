@@ -1,11 +1,23 @@
-import { Injectable, forwardRef, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  forwardRef,
+  Inject,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OAuth2Client } from 'google-auth-library';
 import { TagService, CreateTagDtoWithUser } from 'src/tag/tag.service';
-import { Repository } from 'typeorm';
+import { Repository, Not } from 'typeorm';
 import { IdentityService } from '../identity/identity.service';
-import { GetSampleTokenDto, UpdateProfileDto } from './auth.dto';
+import {
+  GetSampleTokenDto,
+  LoginDto,
+  UpdateProfileDto,
+  RegisterDto,
+} from './auth.dto';
 import { User } from './auth.entity';
+import bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -60,6 +72,56 @@ export class AuthService {
     return this.identityService.generateUserToken(user.id);
   }
 
+  async login(params: LoginDto) {
+    const user = await this.authRepo.findOne({
+      where: [
+        { username: params.usernameOrEmail },
+        { email: params.usernameOrEmail },
+      ],
+    });
+    if (!user) {
+      throw new HttpException(
+        'Username, Email or Password is wrong',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const isValid = await bcrypt.compare(params.password, user.password || '');
+    if (!isValid) {
+      throw new HttpException(
+        'Username, Email or Password is wrong',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    return this.identityService.generateUserToken(user.id);
+  }
+
+  async register(params: RegisterDto) {
+    const user = await this.authRepo.findOne({
+      where: [{ username: params.username }, { email: params.email }],
+    });
+    if (user) {
+      throw new HttpException('User existed', HttpStatus.CONFLICT);
+    }
+    const pwd = await bcrypt.hash(params.password, 10);
+    const newUser = await this.authRepo.save({
+      email: params.email,
+      username: params.username,
+      password: pwd,
+    });
+    const newTags = [
+      { name: 'Công việc', isDefault: true, color: '#009EFF' },
+      { name: 'Gia đình', isDefault: true, color: '#FF1300' },
+      { name: 'Học tập', isDefault: true, color: '#B900FF' },
+      { name: 'Chuyến đi', isDefault: true, color: '#45CF09' },
+      { name: 'Tình yêu', isDefault: true, color: '#FF0080' },
+    ].map(el => ({
+      ...el,
+      user: newUser,
+    })) as CreateTagDtoWithUser[];
+    await Promise.all(newTags.map(el => this.tagService.create(el)));
+    return newUser;
+  }
+
   async getTokenSample(params: GetSampleTokenDto) {
     const { email, passwordSystem } = params;
     if (passwordSystem !== 'test') {
@@ -81,6 +143,17 @@ export class AuthService {
   }
 
   async update(id: number, params: UpdateProfileDto) {
+    if (params.username) {
+      const user = await this.authRepo.findOne({
+        where: { id: Not(id), username: params.username },
+      });
+      if (user) {
+        throw new HttpException(
+          'Tên tài khoản đã tồn tại',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    }
     return await this.authRepo.update({ id }, params);
   }
 

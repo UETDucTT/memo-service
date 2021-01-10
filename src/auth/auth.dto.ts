@@ -5,7 +5,44 @@ import {
   IsEmail,
   IsOptional,
   IsDateString,
+  Matches,
 } from 'class-validator';
+
+export class LoginDto {
+  @ApiProperty()
+  @IsDefined()
+  @IsString()
+  usernameOrEmail: string;
+
+  @ApiProperty()
+  @IsDefined()
+  @IsString()
+  password: string;
+}
+
+export class RegisterDto {
+  @ApiProperty()
+  @IsDefined()
+  @IsString()
+  @Matches(/^[a-zA-Z0-9]{6,20}$/, {
+    message: 'Tên TK từ 6 đến 20 ký tự, chỉ bao gồm chữ số & chữ cái',
+  })
+  username: string;
+
+  @ApiProperty()
+  @IsDefined()
+  @IsString()
+  @IsEmail()
+  email: string;
+
+  @ApiProperty()
+  @IsDefined()
+  @IsString()
+  @Matches(/^[a-zA-Z0-9]{6,20}$/, {
+    message: 'Mật khẩu từ 6 đến 20 ký tự, chỉ bao gồm chữ số & chữ cái',
+  })
+  password: string;
+}
 
 export class GetSampleTokenDto {
   @ApiProperty()
@@ -35,6 +72,14 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   name: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  @Matches(/^[a-zA-Z0-9]{6,20}$/, {
+    message: 'Tên TK từ 6 đến 20 ký tự, chỉ bao gồm chữ số & chữ cái',
+  })
+  username: string;
 
   @ApiProperty()
   @IsOptional()

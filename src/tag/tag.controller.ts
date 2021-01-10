@@ -8,6 +8,7 @@ import {
   UsePipes,
   Body,
   Delete,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthMeta } from 'src/auth/auth.decorator';
@@ -19,9 +20,11 @@ import {
 } from './tag.model';
 import { TagService } from './tag.service';
 import { ParamTagDto, EditTagDto, CreateTagDto } from './tag.dto';
+import { TransformInterceptor } from './transform.inteceptor';
 
 @Controller('tags')
 @ApiTags('Tags Action')
+@UseInterceptors(new TransformInterceptor())
 export class TagController {
   constructor(private tagService: TagService) {}
 

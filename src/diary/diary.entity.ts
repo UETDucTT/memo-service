@@ -30,12 +30,18 @@ export enum Status {
 @Entity({ name: 'diary' })
 export class Diary {
   @PrimaryGeneratedColumn('uuid')
+  @ApiProperty()
+  @Expose()
   id: string;
 
   @Column({ length: 255 })
+  @ApiProperty()
+  @Expose()
   title: string;
 
   @Column({ type: 'text', nullable: true })
+  @ApiProperty()
+  @Expose()
   content?: string;
 
   @Column({
@@ -50,18 +56,24 @@ export class Diary {
     enum: Status,
     default: Status.private,
   })
+  @ApiProperty()
+  @Expose()
   status: Status;
 
   @Column({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP',
   })
+  @ApiProperty()
+  @Expose()
   time: Date;
 
   @CreateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP(6)',
   })
+  @ApiProperty()
+  @Expose()
   createdAt: Date;
 
   @UpdateDateColumn({
@@ -69,6 +81,8 @@ export class Diary {
     default: () => 'CURRENT_TIMESTAMP(6)',
     onUpdate: 'CURRENT_TIMESTAMP(6)',
   })
+  @ApiProperty()
+  @Expose()
   updatedAt: Date;
 
   @ManyToOne(
@@ -76,6 +90,8 @@ export class Diary {
     user => user.diaries,
     { onDelete: 'CASCADE' },
   )
+  @ApiProperty()
+  @Expose()
   user: User;
 
   @OneToMany(
@@ -83,6 +99,8 @@ export class Diary {
     resource => resource.diary,
     { cascade: true },
   )
+  @ApiProperty()
+  @Expose()
   resources: DiaryResource[];
 
   @OneToMany(
@@ -90,6 +108,8 @@ export class Diary {
     link => link.diary,
     { cascade: true },
   )
+  @ApiProperty()
+  @Expose()
   links: Link[];
 
   @ManyToOne(
@@ -97,5 +117,7 @@ export class Diary {
     tag => tag.diaries,
     { onDelete: 'SET NULL' },
   )
+  @ApiProperty()
+  @Expose()
   tag: Tag;
 }

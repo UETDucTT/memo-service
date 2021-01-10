@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
@@ -15,6 +15,7 @@ import {
   IsUrl,
 } from 'class-validator';
 import { PreviewLinkService } from './link-preview.service';
+import { TransformInterceptor } from './transform.inteceptor';
 
 class RequestGetPreviewLink {
   @ApiProperty()
@@ -24,6 +25,7 @@ class RequestGetPreviewLink {
 
 @Controller('preview-link')
 @ApiTags('Preview Link')
+@UseInterceptors(new TransformInterceptor())
 export class PreviewLinkController {
   constructor(private previewLinkService: PreviewLinkService) {}
 
