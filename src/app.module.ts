@@ -13,6 +13,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
 import { NotificationModule } from './notification/notification.module';
 import { PreviewLinkModule } from './link-preview/link-preview.module';
 import { TagModule } from './tag/tag.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -28,6 +29,16 @@ import { TagModule } from './tag/tag.module';
     PreviewLinkModule,
     TagModule,
     ScheduleModule.forRoot(),
+    RedisModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => [
+        {
+          name: 'main',
+          url: configService.get<string>('redis.mainUrl'),
+        },
+      ],
+      inject: [ConfigService],
+    }),
     MailerModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
