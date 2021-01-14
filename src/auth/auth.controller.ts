@@ -10,13 +10,20 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { TransformResponse, SystemToken, IDToken } from './auth.model';
+import {
+  TransformResponse,
+  SystemToken,
+  IDToken,
+  TokenRequest,
+} from './auth.model';
 import { AuthMeta } from './auth.decorator';
 import {
   GetSampleTokenDto,
   UpdateProfileDto,
   LoginDto,
   RegisterDto,
+  RequestForgotPasswordDto,
+  ResetPasswordDto,
 } from './auth.dto';
 import { User } from './auth.entity';
 import { OnlyId, UserOverviewResponse } from 'src/diary/diary.model';
@@ -131,6 +138,50 @@ export class AuthController {
     await this.authService.update(user.id, req);
     return {
       id: user.id,
+    };
+  }
+
+  @Post(['confirm-register'])
+  @ApiResponse({
+    status: 200,
+    description: 'Confirm Register',
+    type: TransformResponse(OnlyId),
+  })
+  async confirmRegister(@Body() req: TokenRequest): Promise<OnlyId> {
+    const res = await this.authService.confirmRegister(req.token);
+    return {
+      id: res.id,
+    };
+  }
+
+  @Post(['request-forgot-password'])
+  @ApiResponse({
+    status: 200,
+    description: 'Request Forgot Password',
+    type: TransformResponse(OnlyId),
+  })
+  async requestForgotPassword(
+    @Body() req: RequestForgotPasswordDto,
+  ): Promise<OnlyId> {
+    const res = await this.authService.requestForgotPassword(req.email);
+    return {
+      id: res.id,
+    };
+  }
+
+  @Post(['reset-password'])
+  @ApiResponse({
+    status: 200,
+    description: 'Reset Password',
+    type: TransformResponse(OnlyId),
+  })
+  async resetPassword(@Body() req: ResetPasswordDto): Promise<OnlyId> {
+    const res = await this.authService.resetPassword(
+      req.token,
+      req.newPassword,
+    );
+    return {
+      id: res.id,
     };
   }
 }

@@ -53,11 +53,20 @@ export class DiaryService {
       where: { user: { id: userId } },
     });
     const currentDiaries = await this.diaryRepo.count({
-      where: {
-        user: { id: userId },
-        ...betweenCondition,
-        ...inCondition,
-      },
+      where: [
+        {
+          user: { id: userId },
+          title: Like(`%${q || ''}%`),
+          ...betweenCondition,
+          ...inCondition,
+        },
+        {
+          user: { id: userId },
+          content: Like(`%${q || ''}%`),
+          ...betweenCondition,
+          ...inCondition,
+        },
+      ],
     });
     const totalDiariesToday = await this.diaryRepo.count({
       where: {
@@ -222,28 +231,48 @@ export class DiaryService {
     }
     if (page) {
       const result = await this.diaryRepo.findAndCount({
-        where: {
-          user: {
-            id: user.id,
+        where: [
+          {
+            user: {
+              id: user.id,
+            },
+            title: Like(`%${q || ''}%`),
+            ...betweenCondition,
+            ...inCondition,
           },
-          title: Like(`%${q || ''}%`),
-          ...betweenCondition,
-          ...inCondition,
-        },
+          {
+            user: {
+              id: user.id,
+            },
+            content: Like(`%${q || ''}%`),
+            ...betweenCondition,
+            ...inCondition,
+          },
+        ],
         relations: ['resources', 'tag', 'links'],
         skip: (page - 1) * pageSize,
         take: pageSize,
         order: { createdAt: 'DESC' },
       });
       const [next] = await this.diaryRepo.findAndCount({
-        where: {
-          user: {
-            id: user.id,
+        where: [
+          {
+            user: {
+              id: user.id,
+            },
+            title: Like(`%${q || ''}%`),
+            ...betweenCondition,
+            ...inCondition,
           },
-          title: Like(`%${q || ''}%`),
-          ...betweenCondition,
-          ...inCondition,
-        },
+          {
+            user: {
+              id: user.id,
+            },
+            content: Like(`%${q || ''}%`),
+            ...betweenCondition,
+            ...inCondition,
+          },
+        ],
         skip: page * pageSize,
         take: 1,
         order: { createdAt: 'DESC' },
@@ -255,20 +284,8 @@ export class DiaryService {
       };
     } else {
       const allElement = await this.diaryRepo.find({
-        where: {
-          user: {
-            id: user.id,
-          },
-          title: Like(`%${q || ''}%`),
-          ...betweenCondition,
-          ...inCondition,
-        },
-        order: { createdAt: 'DESC' },
-      });
-      const idx = allElement.findIndex(el => el.id === lastId);
-      if (idx !== -1) {
-        const result = await this.diaryRepo.findAndCount({
-          where: {
+        where: [
+          {
             user: {
               id: user.id,
             },
@@ -276,20 +293,62 @@ export class DiaryService {
             ...betweenCondition,
             ...inCondition,
           },
+          {
+            user: {
+              id: user.id,
+            },
+            content: Like(`%${q || ''}%`),
+            ...betweenCondition,
+            ...inCondition,
+          },
+        ],
+        order: { createdAt: 'DESC' },
+      });
+      const idx = allElement.findIndex(el => el.id === lastId);
+      if (idx !== -1) {
+        const result = await this.diaryRepo.findAndCount({
+          where: [
+            {
+              user: {
+                id: user.id,
+              },
+              title: Like(`%${q || ''}%`),
+              ...betweenCondition,
+              ...inCondition,
+            },
+            {
+              user: {
+                id: user.id,
+              },
+              content: Like(`%${q || ''}%`),
+              ...betweenCondition,
+              ...inCondition,
+            },
+          ],
           relations: ['resources', 'tag', 'links'],
           skip: idx + 1,
           take: pageSize,
           order: { createdAt: 'DESC' },
         });
         const [next] = await this.diaryRepo.findAndCount({
-          where: {
-            user: {
-              id: user.id,
+          where: [
+            {
+              user: {
+                id: user.id,
+              },
+              title: Like(`%${q || ''}%`),
+              ...betweenCondition,
+              ...inCondition,
             },
-            title: Like(`%${q || ''}%`),
-            ...betweenCondition,
-            ...inCondition,
-          },
+            {
+              user: {
+                id: user.id,
+              },
+              content: Like(`%${q || ''}%`),
+              ...betweenCondition,
+              ...inCondition,
+            },
+          ],
           skip: idx + 1 + pageSize,
           take: 1,
           order: { createdAt: 'DESC' },
@@ -301,28 +360,48 @@ export class DiaryService {
         };
       } else {
         const result = await this.diaryRepo.findAndCount({
-          where: {
-            user: {
-              id: user.id,
+          where: [
+            {
+              user: {
+                id: user.id,
+              },
+              title: Like(`%${q || ''}%`),
+              ...betweenCondition,
+              ...inCondition,
             },
-            title: Like(`%${q || ''}%`),
-            ...betweenCondition,
-            ...inCondition,
-          },
+            {
+              user: {
+                id: user.id,
+              },
+              content: Like(`%${q || ''}%`),
+              ...betweenCondition,
+              ...inCondition,
+            },
+          ],
           relations: ['resources', 'tags', 'links'],
           skip: 0,
           take: pageSize,
           order: { createdAt: 'DESC' },
         });
         const [next] = await this.diaryRepo.findAndCount({
-          where: {
-            user: {
-              id: user.id,
+          where: [
+            {
+              user: {
+                id: user.id,
+              },
+              title: Like(`%${q || ''}%`),
+              ...betweenCondition,
+              ...inCondition,
             },
-            title: Like(`%${q || ''}%`),
-            ...betweenCondition,
-            ...inCondition,
-          },
+            {
+              user: {
+                id: user.id,
+              },
+              content: Like(`%${q || ''}%`),
+              ...betweenCondition,
+              ...inCondition,
+            },
+          ],
           skip: pageSize,
           take: 1,
           order: { createdAt: 'DESC' },

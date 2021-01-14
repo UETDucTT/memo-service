@@ -96,3 +96,26 @@ export class UpdateProfileDto {
   @IsDateString()
   birthday: string;
 }
+
+export class RequestForgotPasswordDto {
+  @ApiProperty()
+  @IsDefined()
+  @IsString()
+  @IsEmail()
+  email: string;
+}
+
+export class ResetPasswordDto {
+  @ApiProperty()
+  @IsDefined()
+  @IsString()
+  token: string;
+
+  @ApiProperty()
+  @IsDefined()
+  @IsString()
+  @Matches(/^[a-zA-Z0-9]{6,20}$/, {
+    message: 'Mật khẩu từ 6 đến 20 ký tự, chỉ bao gồm chữ số & chữ cái',
+  })
+  newPassword: string;
+}

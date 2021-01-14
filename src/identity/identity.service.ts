@@ -21,4 +21,16 @@ export class IdentityService {
       ),
     };
   }
+
+  generateTokenConfirmRegister(email: string, expiredSecond: number) {
+    return {
+      token: jwt.sign(
+        {
+          cid: email,
+        },
+        this.config.get<string>('identity.jwtSecretKey'),
+        { expiresIn: `${expiredSecond}s` },
+      ),
+    };
+  }
 }

@@ -18,6 +18,8 @@ import {
 } from './auth.dto';
 import { User } from './auth.entity';
 import bcrypt from 'bcrypt';
+import { RedisService } from 'src/redis/redis.service';
+import { TaskService } from 'src/task/task.service';
 
 @Injectable()
 export class AuthService {
@@ -26,12 +28,19 @@ export class AuthService {
     @InjectRepository(User)
     private readonly authRepo: Repository<User>,
     private readonly identityService: IdentityService,
+    private readonly redisService: RedisService,
+    @Inject(forwardRef(() => TaskService))
+    private readonly taskService: TaskService,
     @Inject(forwardRef(() => TagService))
     private readonly tagService: TagService,
   ) {
     this.client = new OAuth2Client(
       '335058615265-gcce2lv24jgadcjv20oblhlav3s0caik.apps.googleusercontent.com',
     );
+  }
+
+  async getDb() {
+    return this.redisService.getClient('main');
   }
 
   async loginGoogle(token?: string) {
@@ -48,6 +57,15 @@ export class AuthService {
       where: [{ sub: ticket.getUserId() }, { email }],
     });
     if (!user) {
+      const db = await this.getDb();
+      const items = await db.keys('verify_*');
+      for (let i = 0; i < items.length; i++) {
+        const data = await db.get(items[i]);
+        const userTemp = JSON.parse(data);
+        if (userTemp?.email === email) {
+          await db.del(items[i]);
+        }
+      }
       const newUser = await this.authRepo.save({
         email,
         name,
@@ -83,6 +101,21 @@ export class AuthService {
   }
 
   async login(params: LoginDto) {
+    const db = await this.getDb();
+    const items = await db.keys('verify_*');
+    for (let i = 0; i < items.length; i++) {
+      const data = await db.get(items[i]);
+      const userTemp = JSON.parse(data);
+      if (
+        userTemp?.email === params.usernameOrEmail ||
+        userTemp?.username === params.usernameOrEmail
+      ) {
+        throw new HttpException(
+          'Tài khoản đang chờ xác thực. Kiểm tra Email của bạn ngay',
+          HttpStatus.CONFLICT,
+        );
+      }
+    }
     const user = await this.authRepo.findOne({
       where: [
         { username: params.usernameOrEmail },
@@ -106,18 +139,85 @@ export class AuthService {
   }
 
   async register(params: RegisterDto) {
+    const db = await this.getDb();
+    const items = await db.keys('verify_*');
+    for (let i = 0; i < items.length; i++) {
+      const data = await db.get(items[i]);
+      const userTemp = JSON.parse(data);
+      if (userTemp?.email === params.email) {
+        throw new HttpException(
+          'Tài khoản đang chờ xác thực. Kiểm tra Email của bạn ngay',
+          HttpStatus.CONFLICT,
+        );
+      }
+    }
     const user = await this.authRepo.findOne({
       where: [{ username: params.username }, { email: params.email }],
     });
     if (user) {
-      throw new HttpException('User existed', HttpStatus.CONFLICT);
+      throw new HttpException('Tên TK / Email đã tồn tại', HttpStatus.CONFLICT);
     }
     const pwd = await bcrypt.hash(params.password, 10);
-    const newUser = await this.authRepo.save({
-      email: params.email,
-      username: params.username,
-      password: pwd,
-    });
+    const tokenConfirmRegister = this.identityService.generateTokenConfirmRegister(
+      params.email,
+      86400,
+    );
+    await db.set(
+      `veriry_${tokenConfirmRegister.token}`,
+      JSON.stringify({
+        email: params.email,
+        username: params.username,
+        password: pwd,
+        cnt: 0,
+      }),
+      'EX',
+      86400,
+    );
+    this.taskService.sendEmailVerifyAccount(
+      {
+        email: params.email,
+        username: params.username,
+      },
+      `veriry_${tokenConfirmRegister.token}`,
+    );
+    // const newUser = await this.authRepo.save({
+    //   email: params.email,
+    //   username: params.username,
+    //   password: pwd,
+    // });
+    // const newTags = [
+    //   { name: 'Công việc', isDefault: true, color: '#009EFF' },
+    //   { name: 'Gia đình', isDefault: true, color: '#FF1300' },
+    //   { name: 'Học tập', isDefault: true, color: '#B900FF' },
+    //   { name: 'Chuyến đi', isDefault: true, color: '#45CF09' },
+    //   { name: 'Tình yêu', isDefault: true, color: '#FF0080' },
+    // ].map(el => ({
+    //   ...el,
+    //   user: newUser,
+    // })) as CreateTagDtoWithUser[];
+    // await Promise.all(newTags.map(el => this.tagService.create(el)));
+    return { id: 0 };
+  }
+
+  async confirmRegister(token: string) {
+    const db = await this.getDb();
+    const item = await db.get(token);
+    if (!item) {
+      throw new HttpException(
+        'Không có yêu cầu xác thực hoặc yêu cầu xác thực đã hết hạn',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const user = JSON.parse(item);
+    if (user?.cnt > 0) {
+      await db.del(token);
+      throw new HttpException(
+        'Yêu cầu xác thực chỉ chấp nhận lần đầu tiên',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    delete user?.cnt;
+    const newUser = await this.authRepo.save(user);
     const newTags = [
       { name: 'Công việc', isDefault: true, color: '#009EFF' },
       { name: 'Gia đình', isDefault: true, color: '#FF1300' },
@@ -129,7 +229,68 @@ export class AuthService {
       user: newUser,
     })) as CreateTagDtoWithUser[];
     await Promise.all(newTags.map(el => this.tagService.create(el)));
+    await db.del(token);
     return newUser;
+  }
+
+  async requestForgotPassword(email: string) {
+    const db = await this.getDb();
+    const user = await this.authRepo.findOne({
+      where: { email },
+    });
+    if (!user) {
+      throw new HttpException(
+        'Email không tồn tại trong hệ thống',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    const tokenForgotPassword = this.identityService.generateTokenConfirmRegister(
+      user.email,
+      3600,
+    );
+    await db.set(
+      `forgot_password_${tokenForgotPassword.token}`,
+      JSON.stringify({
+        email: user.email,
+        cnt: 0,
+      }),
+      'EX',
+      3600,
+    );
+    this.taskService.sendEmailForgotPassword(
+      user,
+      `forgot_password_${tokenForgotPassword.token}`,
+    );
+    return { id: user.id };
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    const db = await this.getDb();
+    const item = await db.get(token);
+    if (!item) {
+      throw new HttpException(
+        'Không có yêu cầu quên mật khẩu hoặc yêu cầu đã hết hạn',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const user = JSON.parse(item);
+    if (user?.cnt > 0) {
+      await db.del(token);
+      throw new HttpException(
+        'Yêu cầu quên mật khẩu chỉ chấp nhận gửi lần đầu tiên',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const pwd = await bcrypt.hash(newPassword, 10);
+    const userUpdate = await this.authRepo.findOne({
+      where: { email: user?.email },
+    });
+    if (!userUpdate) {
+      throw new HttpException('Error', HttpStatus.NOT_FOUND);
+    }
+    await this.authRepo.save({ ...userUpdate, password: pwd });
+    await db.del(token);
+    return { id: userUpdate.id };
   }
 
   async getTokenSample(params: GetSampleTokenDto) {

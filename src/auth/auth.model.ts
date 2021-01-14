@@ -15,6 +15,13 @@ export class IDToken {
   idToken: string;
 }
 
+export class TokenRequest {
+  @ApiProperty({ description: 'Token verify' })
+  @IsDefined()
+  @IsString()
+  token: string;
+}
+
 export class SystemToken {
   @ApiProperty()
   @Expose()

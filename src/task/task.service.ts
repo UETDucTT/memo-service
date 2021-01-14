@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { Diary } from 'src/diary/diary.entity';
 import { ConfigService } from '@nestjs/config';
@@ -7,11 +7,13 @@ import { NotificationGateway } from 'src/notification/notification.gateway';
 import { AuthService } from 'src/auth/auth.service';
 import { In } from 'typeorm';
 import { NotificationService } from 'src/notification/notification.service';
+import { User } from 'src/auth/auth.entity';
 
 @Injectable()
 export class TaskService {
   constructor(
     private readonly mailerService: MailerService,
+    @Inject(forwardRef(() => AuthService))
     private readonly userService: AuthService,
     private readonly notificationService: NotificationService,
     private readonly notificationGateway: NotificationGateway,
@@ -63,5 +65,51 @@ export class TaskService {
           console.error(err);
         });
     }
+  }
+
+  async sendEmailVerifyAccount(
+    userInfo: { username: string; email: string },
+    token: string,
+  ) {
+    this.mailerService
+      .sendMail({
+        to: userInfo.email,
+        from: 'DUCTT-UET <trantienduc10@gmail.com>', // Senders email address
+        subject: `[MEMO] Bạn cần xác thực email trước khi đăng nhập 😱`,
+        context: {
+          name: userInfo.username,
+          link: `${this.config.get<string>(
+            'service.domainClient',
+          )}confirm-register?token=${token}`,
+        },
+        template: 'verifyAccount',
+      })
+      .then(async success => {
+        console.log(success);
+      })
+      .catch(err => {
+        console.error(err);
+      });
+  }
+  async sendEmailForgotPassword(user: User, token: string) {
+    this.mailerService
+      .sendMail({
+        to: user.email,
+        from: 'DUCTT-UET <trantienduc10@gmail.com>', // Senders email address
+        subject: `[MEMO] Đặt lại mật khẩu của bạn`,
+        context: {
+          link: `${this.config.get<string>(
+            'service.domainClient',
+          )}forgot-password?token=${token}&name=${user.name ||
+            user.username}&picture=${user.picture}`,
+        },
+        template: 'forgotPassword',
+      })
+      .then(async success => {
+        console.log(success);
+      })
+      .catch(err => {
+        console.error(err);
+      });
   }
 }

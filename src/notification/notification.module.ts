@@ -1,4 +1,10 @@
-import { Module, Global, NestModule, MiddlewareConsumer } from '@nestjs/common';
+import {
+  Module,
+  Global,
+  NestModule,
+  MiddlewareConsumer,
+  forwardRef,
+} from '@nestjs/common';
 import { NotificationGateway } from './notification.gateway';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Notification } from './notification.entity';
@@ -13,7 +19,7 @@ import { AuthModule } from 'src/auth/auth.module';
   imports: [
     TypeOrmModule.forFeature([Notification]),
     IdentityModule,
-    AuthModule,
+    forwardRef(() => AuthModule),
   ],
   providers: [NotificationGateway, NotificationService],
   exports: [NotificationGateway, NotificationService],
