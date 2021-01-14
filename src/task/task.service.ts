@@ -100,8 +100,9 @@ export class TaskService {
         context: {
           link: `${this.config.get<string>(
             'service.domainClient',
-          )}forgot-password?token=${token}&name=${user.name ||
-            user.username}&picture=${user.picture}`,
+          )}forgot-password?token=${token}&name=${user.name || user.username}${
+            user.picture ? `&picture=${user.picture}` : ''
+          }`,
         },
         template: 'forgotPassword',
       })
