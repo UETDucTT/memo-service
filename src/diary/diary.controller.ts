@@ -70,11 +70,11 @@ export class DiaryController {
     description: 'get list diaries',
     type: TransformResponse(DiariesResponse),
   })
-  @UsePipes(new ValidationPipe({ transform: true }))
   async getDiaries(
     @AuthMeta() user,
     @Query() dto: SearchDiaryDto,
   ): Promise<DiariesResponse> {
+    console.log(dto);
     const { result, hasMore } = await this.diaryService.getList({
       ...dto,
       user,
