@@ -163,7 +163,7 @@ export class SearchDiaryDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsEnum(Emotion, { each: true })
-  @Transform(val => {
+  @Transform(({ value: val }) => {
     if (val) {
       if (!Array.isArray(val)) {
         return [val];
@@ -179,13 +179,13 @@ export class SearchDiaryDto {
     format: 'form',
   })
   @IsArray()
-  @Transform((value: string) => value.split(','))
+  @Transform(({ value }) => value.split(','))
   @IsUUID(4, { each: true })
   tag: string[];
 
   @ApiProperty({ required: false, default: 1 })
   @IsOptional()
-  @Transform(val => {
+  @Transform(({ value: val }) => {
     if (isNaN(parseInt(val?.toString())) || parseInt(val?.toString()) <= 0) {
       throw new BadRequestException('page validation fail');
     }
@@ -195,7 +195,7 @@ export class SearchDiaryDto {
 
   @ApiProperty({ required: false, default: 10 })
   @IsOptional()
-  @Transform(val => {
+  @Transform(({ value: val }) => {
     if (isNaN(parseInt(val?.toString())) || parseInt(val?.toString()) <= 0) {
       throw new BadRequestException('pageSize validation fail');
     }
