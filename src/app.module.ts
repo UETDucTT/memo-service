@@ -14,6 +14,7 @@ import { NotificationModule } from './notification/notification.module';
 import { PreviewLinkModule } from './link-preview/link-preview.module';
 import { TagModule } from './tag/tag.module';
 import { RedisModule } from './redis/redis.module';
+import { DiaryShareModule } from './diary-share/diary-share.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { RedisModule } from './redis/redis.module';
     ResourceModule,
     PreviewLinkModule,
     TagModule,
+    DiaryShareModule,
     ScheduleModule.forRoot(),
     RedisModule.forRootAsync({
       imports: [ConfigModule],

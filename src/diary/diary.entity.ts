@@ -13,6 +13,7 @@ import { Expose } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { Tag } from 'src/tag/tag.entity';
 import { Link } from 'src/link-preview/link-preview.entity';
+import { DiaryShare } from 'src/diary-share/diary-share.entity';
 
 export enum Emotion {
   excellent = 'excellent',
@@ -111,6 +112,15 @@ export class Diary {
   @ApiProperty()
   @Expose()
   links: Link[];
+
+  @OneToMany(
+    () => DiaryShare,
+    share => share.diary,
+    { cascade: true },
+  )
+  @ApiProperty()
+  @Expose()
+  shares: DiaryShare[];
 
   @ManyToOne(
     () => Tag,
