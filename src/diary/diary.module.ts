@@ -3,6 +3,7 @@ import {
   NestModule,
   MiddlewareConsumer,
   RequestMethod,
+  forwardRef,
 } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Diary } from './diary.entity';
@@ -13,15 +14,18 @@ import { DiaryController } from './diary.controller';
 import { DiaryService } from './diary.service';
 import { TaskModule } from 'src/task/task.module';
 import { TagModule } from 'src/tag/tag.module';
+import { DiaryShareModule } from 'src/diary-share/diary-share.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Diary]),
     IdentityModule,
-    AuthModule,
-    TaskModule,
-    TagModule,
+    forwardRef(() => AuthModule),
+    forwardRef(() => TaskModule),
+    forwardRef(() => TagModule),
+    forwardRef(() => DiaryShareModule),
   ],
+  exports: [DiaryService],
   controllers: [DiaryController],
   providers: [DiaryService],
 })

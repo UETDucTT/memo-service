@@ -7,6 +7,8 @@ import {
   Get,
   Patch,
   UseInterceptors,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
@@ -28,12 +30,17 @@ import {
 import { User } from './auth.entity';
 import { OnlyId, UserOverviewResponse } from 'src/diary/diary.model';
 import { TransformInterceptor } from './transform.inteceptor';
+import { DiaryShareService } from 'src/diary-share/diary-share.service';
 
 @Controller('auth')
 @ApiTags('Auth management')
 @UseInterceptors(new TransformInterceptor())
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    @Inject(forwardRef(() => DiaryShareService))
+    private diaryShareService: DiaryShareService,
+  ) {}
 
   @Post(['get-token'])
   @ApiResponse({
@@ -122,6 +129,18 @@ export class AuthController {
   async getAllUsers(@AuthMeta() _user): Promise<UserOverviewResponse> {
     const users = await this.authService.getAllUser();
     return { users };
+  }
+
+  @Get(['/shared-emails'])
+  @ApiBearerAuth('Authorization')
+  @ApiResponse({
+    status: 200,
+    description: 'Get all shared emails',
+  })
+  async getShareUsers(@AuthMeta() _user): Promise<{ emails: string[] }> {
+    console.log(_user);
+    const emails = await this.diaryShareService.getSharedUser(_user);
+    return { emails };
   }
 
   @Patch(['me/update'])

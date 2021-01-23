@@ -4,6 +4,7 @@ import { Diary } from './diary.entity';
 import { DiaryResource } from 'src/resource/resource.entity';
 import { PaginationResponse } from 'src/types';
 import { User } from 'src/auth/auth.entity';
+import { DiaryShare } from 'src/diary-share/diary-share.entity';
 
 export type ClassType<T = any> = new (...args: any[]) => T;
 
@@ -32,6 +33,12 @@ export class DiaryResponse {
   @ApiProperty()
   @Expose()
   diary: DiaryItem;
+}
+
+export class HistoryShareResponse {
+  @ApiProperty()
+  @Expose()
+  shares: DiaryShare[];
 }
 
 export class SummaryDiariesResponse {

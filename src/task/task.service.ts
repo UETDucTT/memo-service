@@ -15,7 +15,9 @@ export class TaskService {
     private readonly mailerService: MailerService,
     @Inject(forwardRef(() => AuthService))
     private readonly userService: AuthService,
+    @Inject(forwardRef(() => NotificationService))
     private readonly notificationService: NotificationService,
+    @Inject(forwardRef(() => NotificationGateway))
     private readonly notificationGateway: NotificationGateway,
     private config: ConfigService,
   ) {}
@@ -49,7 +51,7 @@ export class TaskService {
         .sendMail({
           to: emailSendByMailService,
           from: 'DUCTT-UET <trantienduc10@gmail.com>', // Senders email address
-          subject: `❤️❤️❤️ Thư mời xem nhật ký của ${diary.user.name} ❤️❤️❤️`,
+          subject: `[IMemo] Thư mời xem bản ghi của ${diary.user.name}`,
           context: {
             name: diary.user.name,
             link: `${this.config.get<string>(

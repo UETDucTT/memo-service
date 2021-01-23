@@ -9,7 +9,6 @@ import {
   Param,
   Delete,
   Patch,
-  BadRequestException,
   UseInterceptors,
 } from '@nestjs/common';
 import {
@@ -32,20 +31,16 @@ import {
   OnlyId,
   TransformResponse,
   SummaryDiariesResponse,
+  HistoryShareResponse,
 } from './diary.model';
 import { DiaryService } from './diary.service';
-import { TaskService } from '../task/task.service';
-import { Status } from './diary.entity';
 import { TransformInterceptor } from './transform.inteceptor';
 
 @Controller('diaries')
 @ApiTags('Diary Action')
 @UseInterceptors(new TransformInterceptor())
 export class DiaryController {
-  constructor(
-    private diaryService: DiaryService,
-    private taskService: TaskService,
-  ) {}
+  constructor(private diaryService: DiaryService) {}
 
   @Get(['/summary'])
   @ApiBearerAuth('Authorization')
@@ -132,19 +127,27 @@ export class DiaryController {
     @Body() triggleSendEmailDto: TriggerSandEmailDto,
     @AuthMeta() user,
   ): Promise<any> {
-    const diary = await this.diaryService.getById(
-      triggleSendEmailDto.id,
-      user.id,
-    );
-    if (diary.status !== Status.public) {
-      throw new BadRequestException('Diary non-public');
-    }
-    this.taskService.sendEmailShareDiary(
-      diary,
-      triggleSendEmailDto.emails.filter(el => el !== user.email),
-    );
+    await this.diaryService.shareDiary(triggleSendEmailDto, user);
     return {
       success: true,
+    };
+  }
+
+  @Get(['/:id/history-shares'])
+  @ApiBearerAuth('Authorization')
+  @ApiResponse({
+    status: 200,
+    description: 'get history shares',
+    type: TransformResponse(HistoryShareResponse),
+  })
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async getDiaryShares(
+    @Param() params: ParamDiaryDto,
+    @AuthMeta() user,
+  ): Promise<HistoryShareResponse> {
+    const res = await this.diaryService.getById(params.id, user.id);
+    return {
+      shares: res.shares,
     };
   }
 

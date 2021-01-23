@@ -12,6 +12,7 @@ import { IdentityModule } from 'src/identity/identity.module';
 import { IdentityMiddleware } from 'src/identity/identity.middleware';
 import { TagModule } from 'src/tag/tag.module';
 import { TaskModule } from 'src/task/task.module';
+import { DiaryShareModule } from 'src/diary-share/diary-share.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { TaskModule } from 'src/task/task.module';
     IdentityModule,
     forwardRef(() => TagModule),
     forwardRef(() => TaskModule),
+    forwardRef(() => DiaryShareModule),
   ],
   controllers: [AuthController],
   providers: [AuthService],
@@ -26,6 +28,8 @@ import { TaskModule } from 'src/task/task.module';
 })
 export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(IdentityMiddleware).forRoutes('auth/me');
+    consumer
+      .apply(IdentityMiddleware)
+      .forRoutes('auth/me', 'auth/all-users', 'auth/shared-emails');
   }
 }

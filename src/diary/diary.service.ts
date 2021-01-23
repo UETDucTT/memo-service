@@ -1,11 +1,24 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, Between, In } from 'typeorm';
-import { CreateDiaryDto, SearchDiaryDto, EditDiaryDto } from './diary.dto';
+import {
+  CreateDiaryDto,
+  SearchDiaryDto,
+  EditDiaryDto,
+  TriggerSandEmailDto,
+} from './diary.dto';
 import { Diary, Status } from './diary.entity';
 import { User } from 'src/auth/auth.entity';
 import { addDays, maxTime } from 'date-fns';
 import { TagService } from 'src/tag/tag.service';
+import { TaskService } from 'src/task/task.service';
+import { DiaryShareService } from 'src/diary-share/diary-share.service';
 
 type CreateDiaryDtoWithUser = CreateDiaryDto & {
   user: User;
@@ -20,7 +33,12 @@ export class DiaryService {
   constructor(
     @InjectRepository(Diary)
     private readonly diaryRepo: Repository<Diary>,
+    @Inject(forwardRef(() => DiaryShareService))
+    private readonly diaryShareService: DiaryShareService,
+    @Inject(forwardRef(() => TagService))
     private readonly tagService: TagService,
+    @Inject(forwardRef(() => TaskService))
+    private taskService: TaskService,
   ) {}
 
   async getSummaryDiaries(userId: number, params: SearchDiaryDto) {
@@ -132,10 +150,10 @@ export class DiaryService {
     return diary.id;
   }
 
-  async getById(id: string, userId: string) {
+  async getById(id: string, userId: number) {
     const diary = await this.diaryRepo.findOne({
       where: { id, user: { id: userId } },
-      relations: ['resources', 'user', 'tag', 'links'],
+      relations: ['resources', 'user', 'tag', 'links', 'shares'],
     });
     if (!diary) {
       throw new NotFoundException(`Diary with id ${id} not found`);
@@ -413,5 +431,26 @@ export class DiaryService {
         };
       }
     }
+  }
+
+  async shareDiary(triggleSendEmailDto: TriggerSandEmailDto, user: User) {
+    const diary = await this.getById(triggleSendEmailDto.id, user.id);
+    if (diary.status !== Status.public) {
+      throw new BadRequestException('Diary non-public');
+    }
+    await this.diaryShareService.bulkCreate(
+      triggleSendEmailDto.emails.map(el => ({
+        email: el,
+        diary,
+      })),
+    );
+    this.taskService.sendEmailShareDiary(
+      diary,
+      triggleSendEmailDto.emails.filter(el => el !== user.email),
+    );
+  }
+
+  async getAllDiaryOfUser(userId: number) {
+    return this.diaryRepo.find({ where: { user: { id: userId } } });
   }
 }
