@@ -52,9 +52,9 @@ import { DiaryShareModule } from './diary-share/diary-share.module';
         return {
           transport: {
             host,
-            port,
-            secure: true,
-            pool: true,
+            port: 587,
+            secure: false,
+            // pool: true,
             tls: {
               // do not fail on invalid certs
               rejectUnauthorized: false,
