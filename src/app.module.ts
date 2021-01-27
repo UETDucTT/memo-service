@@ -54,7 +54,7 @@ import { DiaryShareModule } from './diary-share/diary-share.module';
             host,
             port,
             ignoreTLS: true,
-            secure: false,
+            secure: true,
             auth: {
               user,
               pass,
