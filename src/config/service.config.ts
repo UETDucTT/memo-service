@@ -7,6 +7,7 @@ export interface ServiceConfig {
   mailPort: number;
   mailUser: string;
   mailPass: string;
+  limitLogin: boolean;
 }
 
 export default registerAs(
@@ -17,5 +18,6 @@ export default registerAs(
     mailPort: parseInt(getEnvVarOrDie('MAIL_PORT')),
     mailUser: getEnvVarOrDie('MAIL_USER'),
     mailPass: getEnvVarOrDie('MAIL_PASS'),
+    limitLogin: getEnvVarOrDie('LIMIT_LOGIN') === 'true',
   }),
 );

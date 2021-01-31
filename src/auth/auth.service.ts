@@ -20,6 +20,7 @@ import { User } from './auth.entity';
 import bcrypt from 'bcrypt';
 import { RedisService } from 'src/redis/redis.service';
 import { TaskService } from 'src/task/task.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -33,6 +34,7 @@ export class AuthService {
     private readonly taskService: TaskService,
     @Inject(forwardRef(() => TagService))
     private readonly tagService: TagService,
+    private config: ConfigService,
   ) {
     this.client = new OAuth2Client(
       '335058615265-gcce2lv24jgadcjv20oblhlav3s0caik.apps.googleusercontent.com',
@@ -57,6 +59,12 @@ export class AuthService {
       where: [{ sub: ticket.getUserId() }, { email }],
     });
     if (!user) {
+      if (this.config.get<number>('service.limitLogin')) {
+        throw new HttpException(
+          'Liên hệ với admin và thử lại',
+          HttpStatus.FORBIDDEN,
+        );
+      }
       const db = await this.getDb();
       const items = await db.keys('verify_*');
       for (let i = 0; i < items.length; i++) {
@@ -154,6 +162,12 @@ export class AuthService {
     const user = await this.authRepo.findOne({
       where: [{ username: params.username }, { email: params.email }],
     });
+    if (this.config.get<number>('service.limitLogin')) {
+      throw new HttpException(
+        'Liên hệ với admin và thử lại',
+        HttpStatus.FORBIDDEN,
+      );
+    }
     if (user) {
       throw new HttpException('Tên TK / Email đã tồn tại', HttpStatus.CONFLICT);
     }
