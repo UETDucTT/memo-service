@@ -34,6 +34,7 @@ export class AuthService {
     private readonly taskService: TaskService,
     @Inject(forwardRef(() => TagService))
     private readonly tagService: TagService,
+    @Inject(forwardRef(() => ConfigService))
     private config: ConfigService,
   ) {
     this.client = new OAuth2Client(

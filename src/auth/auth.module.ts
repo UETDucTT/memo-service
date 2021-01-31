@@ -13,6 +13,7 @@ import { IdentityMiddleware } from 'src/identity/identity.middleware';
 import { TagModule } from 'src/tag/tag.module';
 import { TaskModule } from 'src/task/task.module';
 import { DiaryShareModule } from 'src/diary-share/diary-share.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { DiaryShareModule } from 'src/diary-share/diary-share.module';
     forwardRef(() => TagModule),
     forwardRef(() => TaskModule),
     forwardRef(() => DiaryShareModule),
+    forwardRef(() => ConfigModule),
   ],
   controllers: [AuthController],
   providers: [AuthService],
