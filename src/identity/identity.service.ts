@@ -10,7 +10,7 @@ export class IdentityService {
     return jwt.verify(token, this.config.get<string>('identity.jwtSecretKey'));
   }
 
-  generateUserToken(id: number) {
+  generateUserToken(id: any) {
     return {
       token: jwt.sign(
         {

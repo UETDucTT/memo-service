@@ -23,7 +23,8 @@ export class TransformInterceptor<T>
   ): Observable<Response<T>> {
     return next.handle().pipe(
       map(data => {
-        const result = classToPlain(data) as T;
+        console.log(data);
+        const result = data as T;
         return { result, statusCode: 0, error: null };
       }),
     );

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { MongooseModule } from '@nestjs/mongoose';
 import identityConfig from './config/identity.config';
 import serviceConfig from './config/service.config';
 import { HealthModule } from './health/health.module';
@@ -18,6 +19,7 @@ import { DiaryShareModule } from './diary-share/diary-share.module';
 
 @Module({
   imports: [
+    MongooseModule.forRoot('mongodb://localhost:27017/memo'),
     TypeOrmModule.forRoot(),
     ConfigModule.forRoot({
       load: [serviceConfig, identityConfig],

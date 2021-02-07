@@ -5,6 +5,7 @@ import {
   forwardRef,
 } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { MongooseModule } from '@nestjs/mongoose';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { User } from './auth.entity';
@@ -14,9 +15,11 @@ import { TagModule } from 'src/tag/tag.module';
 import { TaskModule } from 'src/task/task.module';
 import { DiaryShareModule } from 'src/diary-share/diary-share.module';
 import { ConfigModule } from '@nestjs/config';
+import { User as UserMongo, UserSchema } from './auth.schema';
 
 @Module({
   imports: [
+    MongooseModule.forFeature([{ name: UserMongo.name, schema: UserSchema }]),
     TypeOrmModule.forFeature([User]),
     IdentityModule,
     forwardRef(() => TagModule),

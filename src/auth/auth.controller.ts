@@ -9,6 +9,7 @@ import {
   UseInterceptors,
   Inject,
   forwardRef,
+  Res,
 } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
@@ -31,6 +32,7 @@ import { User } from './auth.entity';
 import { OnlyId, UserOverviewResponse } from 'src/diary/diary.model';
 import { TransformInterceptor } from './transform.inteceptor';
 import { DiaryShareService } from 'src/diary-share/diary-share.service';
+import { User as UserMongo } from './auth.schema';
 
 @Controller('auth')
 @ApiTags('Auth management')
@@ -113,9 +115,9 @@ export class AuthController {
   @ApiResponse({
     status: 200,
     description: 'User info',
-    type: TransformResponse(User),
+    type: TransformResponse(UserMongo),
   })
-  getMe(@AuthMeta() user): User {
+  getMe(@AuthMeta() user) {
     return user;
   }
 

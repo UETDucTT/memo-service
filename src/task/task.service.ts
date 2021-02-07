@@ -8,6 +8,7 @@ import { AuthService } from 'src/auth/auth.service';
 import { In } from 'typeorm';
 import { NotificationService } from 'src/notification/notification.service';
 import { User } from 'src/auth/auth.entity';
+import { User as UserMongo } from 'src/auth/auth.schema';
 
 @Injectable()
 export class TaskService {
@@ -93,7 +94,7 @@ export class TaskService {
         console.error(err);
       });
   }
-  async sendEmailForgotPassword(user: User, token: string) {
+  async sendEmailForgotPassword(user: UserMongo, token: string) {
     this.mailerService
       .sendMail({
         to: user.email,

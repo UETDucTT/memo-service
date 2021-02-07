@@ -7,6 +7,7 @@ import {
 import { Request, Response, NextFunction } from 'express';
 import { IdentityService } from './identity.service';
 import { AuthService } from '../auth/auth.service';
+import * as mongoose from 'mongoose';
 
 @Injectable()
 export class IdentityMiddleware implements NestMiddleware {
@@ -21,11 +22,10 @@ export class IdentityMiddleware implements NestMiddleware {
         const { cid } = this.identityService.decodeUserToken(
           token.split(' ')[1],
         );
-        const user = await this.authService.findOne({ where: { id: cid } });
+        const user = await this.authService.findById(cid);
         if (user) {
-          (request as any).user = user;
-          next();
-          return;
+          (request as any).user = user.toObject();
+          return next();
         }
       }
       throw new HttpException(

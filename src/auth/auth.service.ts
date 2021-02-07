@@ -5,6 +5,7 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
+import { Model } from 'mongoose';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OAuth2Client } from 'google-auth-library';
 import { TagService, CreateTagDtoWithUser } from 'src/tag/tag.service';
@@ -18,9 +19,11 @@ import {
 } from './auth.dto';
 import { User } from './auth.entity';
 import bcrypt from 'bcrypt';
+import { InjectModel } from '@nestjs/mongoose';
 import { RedisService } from 'src/redis/redis.service';
 import { TaskService } from 'src/task/task.service';
 import { ConfigService } from '@nestjs/config';
+import { User as UserMongo, UserDocument } from './auth.schema';
 
 @Injectable()
 export class AuthService {
@@ -36,6 +39,8 @@ export class AuthService {
     private readonly tagService: TagService,
     @Inject(forwardRef(() => ConfigService))
     private config: ConfigService,
+    @InjectModel(UserMongo.name)
+    private userModel: Model<UserDocument>,
   ) {
     this.client = new OAuth2Client(
       '335058615265-gcce2lv24jgadcjv20oblhlav3s0caik.apps.googleusercontent.com',
@@ -125,12 +130,14 @@ export class AuthService {
         );
       }
     }
-    const user = await this.authRepo.findOne({
-      where: [
-        { username: params.usernameOrEmail },
-        { email: params.usernameOrEmail },
-      ],
-    });
+    const user = await this.userModel
+      .findOne({
+        $or: [
+          { username: params.usernameOrEmail },
+          { email: params.usernameOrEmail },
+        ],
+      })
+      .exec();
     if (!user) {
       throw new HttpException(
         'Username, Email or Password is wrong',
@@ -160,9 +167,14 @@ export class AuthService {
         );
       }
     }
-    const user = await this.authRepo.findOne({
-      where: [{ username: params.username }, { email: params.email }],
-    });
+    const user = await this.userModel
+      .findOne({
+        $or: [{ username: params.username }, { email: params.email }],
+      })
+      .exec();
+    // const user = await this.authRepo.findOne({
+    //   where: [{ username: params.username }, { email: params.email }],
+    // });
     if (this.config.get<number>('service.limitLogin')) {
       throw new HttpException(
         'Liên hệ với admin và thử lại',
@@ -232,27 +244,31 @@ export class AuthService {
       );
     }
     delete user?.cnt;
-    const newUser = await this.authRepo.save(user);
-    const newTags = [
-      { name: 'Công việc', isDefault: true, color: '#009EFF' },
-      { name: 'Gia đình', isDefault: true, color: '#FF1300' },
-      { name: 'Học tập', isDefault: true, color: '#B900FF' },
-      { name: 'Chuyến đi', isDefault: true, color: '#45CF09' },
-      { name: 'Tình yêu', isDefault: true, color: '#FF0080' },
-    ].map(el => ({
-      ...el,
-      user: newUser,
-    })) as CreateTagDtoWithUser[];
-    await Promise.all(newTags.map(el => this.tagService.create(el)));
+    const userCreated = new this.userModel(user);
+    const newUser = await userCreated.save();
+    // const newUser = await this.authRepo.save(user);
+    // const newTags = [
+    //   { name: 'Công việc', isDefault: true, color: '#009EFF' },
+    //   { name: 'Gia đình', isDefault: true, color: '#FF1300' },
+    //   { name: 'Học tập', isDefault: true, color: '#B900FF' },
+    //   { name: 'Chuyến đi', isDefault: true, color: '#45CF09' },
+    //   { name: 'Tình yêu', isDefault: true, color: '#FF0080' },
+    // ].map(el => ({
+    //   ...el,
+    //   user: newUser,
+    // })) as CreateTagDtoWithUser[];
+    // await Promise.all(newTags.map(el => this.tagService.create(el)));
     await db.del(token);
     return newUser;
   }
 
   async requestForgotPassword(email: string) {
     const db = await this.getDb();
-    const user = await this.authRepo.findOne({
-      where: { email },
-    });
+    const user = await this.userModel
+      .findOne({
+        email,
+      })
+      .exec();
     if (!user) {
       throw new HttpException(
         'Email không tồn tại trong hệ thống',
@@ -297,13 +313,15 @@ export class AuthService {
       );
     }
     const pwd = await bcrypt.hash(newPassword, 10);
-    const userUpdate = await this.authRepo.findOne({
-      where: { email: user?.email },
-    });
-    if (!userUpdate) {
-      throw new HttpException('Error', HttpStatus.NOT_FOUND);
-    }
-    await this.authRepo.save({ ...userUpdate, password: pwd });
+    const userUpdate = await this.userModel
+      .findOneAndUpdate(
+        {
+          email: user?.email,
+        },
+        { password: pwd },
+      )
+      .exec();
+    console.log(userUpdate);
     await db.del(token);
     return { id: userUpdate.id };
   }
@@ -320,8 +338,12 @@ export class AuthService {
     return this.identityService.generateUserToken(user.id);
   }
 
-  async findOne(condition: any): Promise<User> {
-    return await this.authRepo.findOne(condition);
+  async findOne(condition: any): Promise<UserDocument> {
+    return await this.userModel.findOne(condition).exec();
+  }
+
+  async findById(id: any): Promise<any> {
+    return await this.userModel.findById(id);
   }
 
   async find(condition: any): Promise<User[]> {
