@@ -93,8 +93,8 @@ export class CreateDiaryDto {
   status: Status;
 
   @ApiProperty({ required: false })
-  @IsUUID()
-  tagId: string;
+  @IsUUID(4, { each: true })
+  tagIds: string[];
 
   @ApiProperty({ required: false, type: () => [ResourceDto] })
   @IsArray()
@@ -134,9 +134,8 @@ export class EditDiaryDto {
 
   @ApiProperty({ required: false })
   @IsOptional()
-  @IsUUID()
-  @MaxLength(255)
-  tagId: string;
+  @IsUUID(4, { each: true })
+  tagIds: string[];
 
   @ApiProperty({ required: false, type: () => [ResourceDto] })
   @IsOptional()

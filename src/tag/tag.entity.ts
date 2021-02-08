@@ -7,6 +7,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   OneToMany,
+  ManyToMany,
 } from 'typeorm';
 import { User } from '../auth/auth.entity';
 
@@ -44,10 +45,9 @@ export class Tag {
   )
   user: User;
 
-  @OneToMany(
+  @ManyToMany(
     () => Diary,
-    diary => diary.tag,
-    { cascade: true },
+    diary => diary.tags,
   )
   diaries: Diary[];
 }

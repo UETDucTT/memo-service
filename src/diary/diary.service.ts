@@ -19,6 +19,7 @@ import { addDays, maxTime } from 'date-fns';
 import { TagService } from 'src/tag/tag.service';
 import { TaskService } from 'src/task/task.service';
 import { DiaryShareService } from 'src/diary-share/diary-share.service';
+import { Tag } from 'src/tag/tag.entity';
 
 type CreateDiaryDtoWithUser = CreateDiaryDto & {
   user: User;
@@ -50,7 +51,7 @@ export class DiaryService {
     if (tag) {
       inCondition = {
         ...inCondition,
-        tag: In(tag),
+        // tags: [{ id: In(tag) }],
       };
     }
     if (fromDate && toDate) {
@@ -100,28 +101,30 @@ export class DiaryService {
   }
 
   async create(params: CreateDiaryDtoWithUser) {
-    const { tagId, ...rest } = params;
+    const { tagIds, ...rest } = params;
     const diary = new Diary();
-    if (tagId === null || tagId) {
-      const currTag = await this.tagService.getTag({ id: tagId });
-      if (tagId && !currTag) {
-        throw new NotFoundException(`Tag with id ${tagId} not found`);
-      }
-      if (currTag) {
-        diary.tag = currTag;
-      } else {
-        diary.tag = null;
+    const tags = [];
+    if (tagIds?.length) {
+      for (let i = 0; i < tagIds.length; i++) {
+        const currTag = await this.tagService.getTag({
+          id: tagIds[i],
+          user: { id: rest.user.id },
+        });
+        if (!currTag) {
+          throw new NotFoundException(`Tag with id ${tagIds[i]} not found`);
+        }
+        tags.push(currTag);
       }
     }
-    this.diaryRepo.merge(diary, rest);
+    this.diaryRepo.merge(diary, { ...rest, tags });
     return await this.diaryRepo.save(diary);
   }
 
   async update(id: string, userId: string, params: EditDiaryDto) {
-    const { tagId, ...rest } = params;
+    const { tagIds, ...rest } = params;
     const diary = await this.diaryRepo.findOne({
       where: { id, user: { id: userId } },
-      relations: ['resources', 'tag', 'links'],
+      relations: ['resources', 'tags', 'links'],
     });
     if (!diary) {
       throw new NotFoundException(`Diary with id ${id} not found`);
@@ -133,17 +136,23 @@ export class DiaryService {
     if (rest.links) {
       diary.links = [];
     }
+    if (tagIds) {
+      diary.tags = [];
+    }
 
-    if (tagId === null || tagId) {
-      const currTag = await this.tagService.getTag({ id: tagId });
-      if (tagId && !currTag) {
-        throw new NotFoundException(`Tag with id ${tagId} not found`);
+    if (tagIds.length) {
+      const tags = [];
+      for (let i = 0; i < tagIds.length; i++) {
+        const currTag = await this.tagService.getTag({
+          id: tagIds[i],
+          user: { id: userId },
+        });
+        if (!currTag) {
+          throw new NotFoundException(`Tag with id ${tagIds[i]} not found`);
+        }
+        tags.push(currTag);
       }
-      if (currTag) {
-        diary.tag = currTag;
-      } else {
-        diary.tag = null;
-      }
+      diary.tags = tags;
     }
     this.diaryRepo.merge(diary, rest);
     await this.diaryRepo.save(diary);
@@ -153,7 +162,7 @@ export class DiaryService {
   async getById(id: string, userId: number) {
     const diary = await this.diaryRepo.findOne({
       where: { id, user: { id: userId } },
-      relations: ['resources', 'user', 'tag', 'links', 'shares'],
+      relations: ['resources', 'user', 'tags', 'links', 'shares'],
     });
     if (!diary) {
       throw new NotFoundException(`Diary with id ${id} not found`);
@@ -164,7 +173,7 @@ export class DiaryService {
   async getPublicById(id: string) {
     const diary = await this.diaryRepo.findOne({
       where: { id, status: Status.public },
-      relations: ['resources', 'user', 'tag', 'links'],
+      relations: ['resources', 'user', 'tags', 'links'],
     });
     if (!diary) {
       throw new NotFoundException(
@@ -214,23 +223,21 @@ export class DiaryService {
       toDate,
       user,
       lastId,
-      emotion,
       tag,
     } = this.buildParams(params);
     let betweenCondition = {};
 
     let inCondition = {};
 
-    if (emotion) {
-      inCondition = {
-        ...inCondition,
-        emotion: In(emotion),
-      };
-    }
     if (tag) {
+      const tags = await this.tagService.getByIds(tag);
+      const diaryIds = tags.reduce(
+        (acc, curr) => [...acc, ...curr.diaries.map(el => el.id)],
+        [],
+      );
       inCondition = {
         ...inCondition,
-        tag: In(tag),
+        id: In(diaryIds),
       };
     }
 
@@ -267,7 +274,7 @@ export class DiaryService {
             ...inCondition,
           },
         ],
-        relations: ['resources', 'tag', 'links'],
+        relations: ['resources', 'tags', 'links'],
         skip: (page - 1) * pageSize,
         take: pageSize,
         order: { createdAt: 'DESC' },
@@ -343,7 +350,7 @@ export class DiaryService {
               ...inCondition,
             },
           ],
-          relations: ['resources', 'tag', 'links'],
+          relations: ['resources', 'tags', 'links'],
           skip: idx + 1,
           take: pageSize,
           order: { createdAt: 'DESC' },

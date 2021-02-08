@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Tag } from './tag.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { User } from 'src/auth/auth.entity';
 import { CreateTagDto, EditTagDto } from './tag.dto';
 
@@ -35,6 +35,13 @@ export class TagService {
       throw new NotFoundException(`Tag with id ${id} not found`);
     }
     return tag;
+  }
+
+  async getByIds(ids: string[]) {
+    return await this.tagRepo.find({
+      where: { id: In(ids) },
+      relations: ['diaries'],
+    });
   }
 
   async update(id: string, userId: string, params: EditTagDto) {

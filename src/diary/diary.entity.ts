@@ -6,6 +6,8 @@ import {
   UpdateDateColumn,
   ManyToOne,
   OneToMany,
+  ManyToMany,
+  JoinTable,
 } from 'typeorm';
 import { User } from '../auth/auth.entity';
 import { DiaryResource } from '../resource/resource.entity';
@@ -122,12 +124,12 @@ export class Diary {
   @Expose()
   shares: DiaryShare[];
 
-  @ManyToOne(
+  @ManyToMany(
     () => Tag,
     tag => tag.diaries,
-    { onDelete: 'SET NULL' },
   )
+  @JoinTable({ name: 'diary_tag' })
   @ApiProperty()
   @Expose()
-  tag: Tag;
+  tags: Tag[];
 }
