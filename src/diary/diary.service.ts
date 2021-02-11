@@ -140,7 +140,7 @@ export class DiaryService {
       diary.tags = [];
     }
 
-    if (tagIds.length) {
+    if (tagIds?.length) {
       const tags = [];
       for (let i = 0; i < tagIds.length; i++) {
         const currTag = await this.tagService.getTag({
