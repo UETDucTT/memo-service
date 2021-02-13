@@ -4,15 +4,21 @@ import { Notification } from './notification.entity';
 import { Repository } from 'typeorm';
 import { User } from 'src/auth/auth.entity';
 import { SearchNotificationDto } from './notification.dto';
+import { Model } from 'mongoose';
+import { InjectModel } from '@nestjs/mongoose';
+import {
+  Notification as NotificationMongo,
+  NotificationDocument,
+} from './notification.schema';
 
 interface NotificationCreateWithUser {
   data: any;
-  seen?: boolean;
-  user: User;
+  seen: boolean;
+  user: string;
 }
 
 type SearchNotificationDtoWithUser = SearchNotificationDto & {
-  user: User;
+  user: string;
 };
 
 @Injectable()
@@ -20,130 +26,77 @@ export class NotificationService {
   constructor(
     @InjectRepository(Notification)
     private readonly notificationRepo: Repository<Notification>,
+    @InjectModel(NotificationMongo.name)
+    private notificationModel: Model<NotificationDocument>,
   ) {}
 
   async bulkCreateNotification(notifications: NotificationCreateWithUser[]) {
-    return await Promise.all(
-      notifications.map(el => this.notificationRepo.save(el)),
-    );
+    return await this.notificationModel.insertMany(notifications);
   }
 
   async getNotifications(params: SearchNotificationDtoWithUser) {
-    let { page, pageSize, lastId, user } = params;
-    if (!lastId && !page) {
-      page = 1;
-    }
+    let { pageSize, lastId, user } = params;
     if (!pageSize) {
       pageSize = 10;
     }
 
-    const [, totalHNotSeen] = await this.notificationRepo.findAndCount({
-      where: {
-        user: {
-          id: user.id,
-        },
-        seen: false,
-      },
-    });
+    const totalHNotSeen = await this.notificationModel
+      .find({
+        $and: [{ user }, { seen: false }],
+      })
+      .countDocuments()
+      .exec();
 
-    if (page) {
-      const result = await this.notificationRepo.findAndCount({
-        where: {
-          user: {
-            id: user.id,
+    if (!lastId) {
+      return [
+        await (this.notificationModel as any).paginate(
+          {
+            user,
           },
-        },
-        skip: (page - 1) * pageSize,
-        take: pageSize,
-        order: { createdAt: 'DESC' },
-      });
-      const [next] = await this.notificationRepo.findAndCount({
-        where: {
-          user: {
-            id: user.id,
+          {
+            page: 1,
+            limit: pageSize,
+            populate: 'user',
+            sort: '-createdAt',
           },
-        },
-        skip: page * pageSize,
-        take: 1,
-        order: { createdAt: 'DESC' },
-      });
-      const hasMore = !!next.length;
-      return {
-        result,
-        hasMore,
+        ),
         totalHNotSeen,
-      };
+      ];
     } else {
-      const allElement = await this.notificationRepo.find({
-        where: {
-          user: {
-            id: user.id,
+      const allElements = await this.notificationModel
+        .find({
+          user,
+        })
+        .sort('-createdAt')
+        .exec();
+      const idx = allElements.findIndex(el => el.id === lastId);
+      return [
+        await (this.notificationModel as any).paginate(
+          {
+            user,
           },
-        },
-        order: { createdAt: 'DESC' },
-      });
-      const idx = allElement.findIndex(el => el.id === lastId);
-      if (idx !== -1) {
-        const result = await this.notificationRepo.findAndCount({
-          where: {
-            user: {
-              id: user.id,
-            },
+          {
+            offset: idx + 1,
+            limit: pageSize,
+            populate: 'user',
+            sort: '-createdAt',
           },
-          skip: idx + 1,
-          take: pageSize,
-          order: { createdAt: 'DESC' },
-        });
-        const [next] = await this.notificationRepo.findAndCount({
-          where: {
-            user: {
-              id: user.id,
-            },
-          },
-          skip: idx + 1 + pageSize,
-          take: 1,
-          order: { createdAt: 'DESC' },
-        });
-        const hasMore = !!next.length;
-        return {
-          result,
-          hasMore,
-          totalHNotSeen,
-        };
-      } else {
-        const result = await this.notificationRepo.findAndCount({
-          where: {
-            user: {
-              id: user.id,
-            },
-          },
-          skip: 0,
-          take: pageSize,
-          order: { createdAt: 'DESC' },
-        });
-        const [next] = await this.notificationRepo.findAndCount({
-          where: {
-            user: {
-              id: user.id,
-            },
-          },
-          skip: pageSize,
-          take: 1,
-          order: { createdAt: 'DESC' },
-        });
-        const hasMore = !!next.length;
-        return {
-          result,
-          hasMore,
-          totalHNotSeen,
-        };
-      }
+        ),
+        totalHNotSeen,
+      ];
     }
   }
 
-  async markAllSeen(userId: number) {
-    return await this.notificationRepo.update(
-      { user: { id: userId } },
+  async markAllSeen(userId: string) {
+    return await this.notificationModel.updateMany(
+      { $and: [{ user: userId }, { seen: false }] },
+      { seen: true },
+    );
+  }
+
+  async markSeen(id: string, userId: string) {
+    return await this.notificationModel.findOneAndUpdate(
+      { $and: [{ _id: id }, { user: userId }] },
       { seen: true },
     );
   }

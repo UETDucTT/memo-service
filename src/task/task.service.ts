@@ -5,9 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { Interval } from '@nestjs/schedule';
 import { NotificationGateway } from 'src/notification/notification.gateway';
 import { AuthService } from 'src/auth/auth.service';
-import { In } from 'typeorm';
 import { NotificationService } from 'src/notification/notification.service';
-import { User } from 'src/auth/auth.entity';
 import { User as UserMongo } from 'src/auth/auth.schema';
 
 @Injectable()
@@ -22,20 +20,20 @@ export class TaskService {
     private readonly notificationGateway: NotificationGateway,
     private config: ConfigService,
   ) {}
-  async sendEmailShareDiary(diary: Diary, emails: string[]) {
+  async sendEmailShareDiary(diary: any, emails: string[]) {
     const users = await this.userService.find({
-      where: { email: In(emails) },
+      email: { $in: emails },
     });
     if (users && users.length) {
       this.notificationGateway.sendToUser(
-        users.map(el => el.id.toString()),
+        users.map(el => el.id),
         {
           diary,
         },
       );
       const notifications = users.map(el => {
         return {
-          user: el,
+          user: el.id,
           data: JSON.stringify({
             type: 'INVITE_VIEW_DIARY',
             diary,

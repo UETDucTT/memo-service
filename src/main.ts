@@ -3,6 +3,12 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import prometheusMiddleware from 'prometheus-api-metrics';
+import mongoose from 'mongoose';
+
+mongoose.set('useNewUrlParser', true);
+mongoose.set('useFindAndModify', false);
+mongoose.set('useCreateIndex', true);
+mongoose.set('useUnifiedTopology', true);
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {

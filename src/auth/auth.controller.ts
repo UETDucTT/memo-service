@@ -128,7 +128,7 @@ export class AuthController {
     description: 'Get all user',
     type: TransformResponse(UserOverviewResponse),
   })
-  async getAllUsers(@AuthMeta() _user): Promise<UserOverviewResponse> {
+  async getAllUsers(@AuthMeta() _user): Promise<any> {
     const users = await this.authService.getAllUser();
     return { users };
   }
@@ -140,7 +140,6 @@ export class AuthController {
     description: 'Get all shared emails',
   })
   async getShareUsers(@AuthMeta() _user): Promise<{ emails: string[] }> {
-    console.log(_user);
     const emails = await this.diaryShareService.getSharedUser(_user);
     return { emails };
   }
@@ -156,6 +155,7 @@ export class AuthController {
     @AuthMeta() user,
     @Body() req: UpdateProfileDto,
   ): Promise<OnlyId> {
+    console.log(user.id);
     await this.authService.update(user.id, req);
     return {
       id: user.id,

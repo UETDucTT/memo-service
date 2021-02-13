@@ -13,17 +13,12 @@ import {
   IsEmail,
   isUUID,
   IsDate,
+  IsMongoId,
 } from 'class-validator';
 import { Type } from 'src/resource/resource.entity';
 import { Emotion, Status } from './diary.entity';
 
 export class ResourceDto {
-  @ApiProperty()
-  @IsOptional()
-  @IsString()
-  @IsUUID()
-  id: string;
-
   @ApiProperty({ enum: Type })
   @IsDefined()
   @IsEnum(Type)
@@ -38,19 +33,9 @@ export class ResourceDto {
   @IsOptional()
   @IsString()
   name?: string;
-
-  @ApiProperty()
-  @IsString()
-  note: string;
 }
 
 export class LinkDto {
-  @ApiProperty()
-  @IsOptional()
-  @IsString()
-  @IsUUID()
-  id: string;
-
   @ApiProperty()
   @IsDefined()
   @IsString()
@@ -83,18 +68,14 @@ export class CreateDiaryDto {
   @IsString()
   content?: string;
 
-  @ApiProperty({ required: false, enum: Emotion })
-  @IsEnum(Emotion)
-  emotion?: Emotion;
-
   @ApiProperty({ enum: Status, default: Status.private })
   @IsOptional()
   @IsEnum(Status)
   status: Status;
 
   @ApiProperty({ required: false })
-  @IsUUID()
-  tagId: string;
+  @IsMongoId({ each: true })
+  tagIds: string[];
 
   @ApiProperty({ required: false, type: () => [ResourceDto] })
   @IsArray()
@@ -104,8 +85,7 @@ export class CreateDiaryDto {
   @IsArray()
   links?: LinkDto[];
 
-  @ApiProperty({ required: false })
-  @IsOptional()
+  @ApiProperty()
   @IsDateString()
   time: Date;
 }
@@ -122,11 +102,6 @@ export class EditDiaryDto {
   @IsString()
   content?: string;
 
-  @ApiProperty({ required: false, enum: Emotion })
-  @IsOptional()
-  @IsEnum(Emotion)
-  emotion?: Emotion;
-
   @ApiProperty({ enum: Status, default: Status.private })
   @IsOptional()
   @IsEnum(Status)
@@ -134,9 +109,8 @@ export class EditDiaryDto {
 
   @ApiProperty({ required: false })
   @IsOptional()
-  @IsUUID()
-  @MaxLength(255)
-  tagId: string;
+  @IsMongoId({ each: true })
+  tagIds: string;
 
   @ApiProperty({ required: false, type: () => [ResourceDto] })
   @IsOptional()
@@ -160,19 +134,6 @@ export class SearchDiaryDto {
   @IsOptional()
   q: string;
 
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsEnum(Emotion, { each: true })
-  @Transform(({ value: val }) => {
-    if (val) {
-      if (!Array.isArray(val)) {
-        return [val];
-      }
-    }
-    return val;
-  })
-  emotion: string[];
-
   @IsOptional()
   @ApiProperty({
     type: [String],
@@ -180,18 +141,18 @@ export class SearchDiaryDto {
   })
   @IsArray()
   @Transform(({ value }) => value.split(','))
-  @IsUUID(4, { each: true })
+  @IsMongoId({ each: true })
   tag: string[];
 
-  @ApiProperty({ required: false, default: 1 })
-  @IsOptional()
-  @Transform(({ value: val }) => {
-    if (isNaN(parseInt(val?.toString())) || parseInt(val?.toString()) <= 0) {
-      throw new BadRequestException('page validation fail');
-    }
-    return parseInt(val?.toString());
-  })
-  page: number;
+  // @ApiProperty({ required: false, default: 1 })
+  // @IsOptional()
+  // @Transform(({ value: val }) => {
+  //   if (isNaN(parseInt(val?.toString())) || parseInt(val?.toString()) <= 0) {
+  //     throw new BadRequestException('page validation fail');
+  //   }
+  //   return parseInt(val?.toString());
+  // })
+  // page: number;
 
   @ApiProperty({ required: false, default: 10 })
   @IsOptional()
@@ -214,21 +175,21 @@ export class SearchDiaryDto {
   toDate: Date;
 
   @ApiProperty({ required: false })
-  @IsUUID()
+  @IsMongoId()
   @IsOptional()
   lastId: string;
 }
 
 export class ParamDiaryDto {
   @ApiProperty({ required: false, default: 'id' })
-  @IsUUID()
+  @IsMongoId()
   id: string;
 }
 
 export class TriggerSandEmailDto {
   @ApiProperty()
   @IsDefined()
-  @IsUUID()
+  @IsMongoId()
   id: string;
 
   @ApiProperty()

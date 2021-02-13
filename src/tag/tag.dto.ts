@@ -13,6 +13,7 @@ import {
   IsEmail,
   isUUID,
   IsBoolean,
+  IsMongoId,
 } from 'class-validator';
 
 export class TagDto {
@@ -31,7 +32,7 @@ export class TagDto {
 
 export class ParamTagDto {
   @ApiProperty({ required: false, default: 'id' })
-  @IsUUID()
+  @IsMongoId()
   id: string;
 }
 

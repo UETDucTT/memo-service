@@ -49,7 +49,6 @@ export class DiaryController {
     description: 'get summary diaries',
     type: TransformResponse(SummaryDiariesResponse),
   })
-  @UsePipes(new ValidationPipe({ transform: true }))
   async getSummaryDiaries(
     @AuthMeta() user,
     @Query() dto: SearchDiaryDto,
@@ -68,17 +67,19 @@ export class DiaryController {
   async getDiaries(
     @AuthMeta() user,
     @Query() dto: SearchDiaryDto,
-  ): Promise<DiariesResponse> {
-    console.log(dto);
-    const { result, hasMore } = await this.diaryService.getList({
+  ): Promise<any> {
+    const {
+      docs,
+      hasNextPage: hasMore,
+      totalDocs,
+    } = await this.diaryService.getList({
       ...dto,
       user,
     });
-    const [list, cnt] = result;
     return {
-      diaries: list,
+      diaries: docs,
       pagination: {
-        totalItems: cnt,
+        totalItems: totalDocs,
         hasMore,
       },
     };
@@ -95,7 +96,7 @@ export class DiaryController {
   async getDiary(
     @Param() params: ParamDiaryDto,
     @AuthMeta() user,
-  ): Promise<DiaryResponse> {
+  ): Promise<any> {
     const res = await this.diaryService.getById(params.id, user.id);
     return {
       diary: res,
@@ -109,7 +110,7 @@ export class DiaryController {
     type: TransformResponse(DiaryResponse),
   })
   @UsePipes(new ValidationPipe({ transform: true }))
-  async getDiaryPublic(@Param() params: ParamDiaryDto): Promise<DiaryResponse> {
+  async getDiaryPublic(@Param() params: ParamDiaryDto): Promise<any> {
     const res = await this.diaryService.getPublicById(params.id);
     return {
       diary: res,
@@ -133,23 +134,23 @@ export class DiaryController {
     };
   }
 
-  @Get(['/:id/history-shares'])
-  @ApiBearerAuth('Authorization')
-  @ApiResponse({
-    status: 200,
-    description: 'get history shares',
-    type: TransformResponse(HistoryShareResponse),
-  })
-  @UsePipes(new ValidationPipe({ transform: true }))
-  async getDiaryShares(
-    @Param() params: ParamDiaryDto,
-    @AuthMeta() user,
-  ): Promise<HistoryShareResponse> {
-    const res = await this.diaryService.getById(params.id, user.id);
-    return {
-      shares: res.shares,
-    };
-  }
+  // @Get(['/:id/history-shares'])
+  // @ApiBearerAuth('Authorization')
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'get history shares',
+  //   type: TransformResponse(HistoryShareResponse),
+  // })
+  // @UsePipes(new ValidationPipe({ transform: true }))
+  // async getDiaryShares(
+  //   @Param() params: ParamDiaryDto,
+  //   @AuthMeta() user,
+  // ): Promise<any> {
+  //   const res = await this.diaryService.getById(params.id, user.id);
+  //   return {
+  //     shares: null,
+  //   };
+  // }
 
   @Patch(['/:id'])
   @ApiBearerAuth('Authorization')
@@ -206,7 +207,7 @@ export class DiaryController {
   ): Promise<OnlyId> {
     const newDiary = await this.diaryService.create({
       ...createDiaryDto,
-      user,
+      user: user.id,
     });
     return {
       id: newDiary.id,

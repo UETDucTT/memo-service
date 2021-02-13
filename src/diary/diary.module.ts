@@ -15,9 +15,20 @@ import { DiaryService } from './diary.service';
 import { TaskModule } from 'src/task/task.module';
 import { TagModule } from 'src/tag/tag.module';
 import { DiaryShareModule } from 'src/diary-share/diary-share.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Diary as DiaryMongo, DiarySchema } from './diary.schema';
+
+DiarySchema.virtual('id').get(function() {
+  return this._id.toHexString();
+});
+
+DiarySchema.set('toJSON', {
+  virtuals: true,
+});
 
 @Module({
   imports: [
+    MongooseModule.forFeature([{ name: DiaryMongo.name, schema: DiarySchema }]),
     TypeOrmModule.forFeature([Diary]),
     IdentityModule,
     forwardRef(() => AuthModule),

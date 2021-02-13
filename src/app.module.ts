@@ -19,7 +19,12 @@ import { DiaryShareModule } from './diary-share/diary-share.module';
 
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb://localhost:27017/memo'),
+    MongooseModule.forRoot('mongodb://localhost:27017/memo', {
+      connectionFactory: connection => {
+        connection.plugin(require('mongoose-paginate-v2'));
+        return connection;
+      },
+    }),
     TypeOrmModule.forRoot(),
     ConfigModule.forRoot({
       load: [serviceConfig, identityConfig],

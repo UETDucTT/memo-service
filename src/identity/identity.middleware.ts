@@ -24,7 +24,7 @@ export class IdentityMiddleware implements NestMiddleware {
         );
         const user = await this.authService.findById(cid);
         if (user) {
-          (request as any).user = user.toObject();
+          (request as any).user = user;
           return next();
         }
       }

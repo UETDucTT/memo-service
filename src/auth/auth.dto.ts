@@ -61,16 +61,6 @@ export class UpdateProfileDto {
   @ApiProperty()
   @IsOptional()
   @IsString()
-  givenName: string;
-
-  @ApiProperty()
-  @IsOptional()
-  @IsString()
-  familyName: string;
-
-  @ApiProperty()
-  @IsOptional()
-  @IsString()
   name: string;
 
   @ApiProperty()
@@ -94,7 +84,7 @@ export class UpdateProfileDto {
   @ApiProperty()
   @IsOptional()
   @IsDateString()
-  birthday: string;
+  birthday: Date;
 }
 
 export class RequestForgotPasswordDto {

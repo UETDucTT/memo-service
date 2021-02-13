@@ -17,6 +17,14 @@ import { DiaryShareModule } from 'src/diary-share/diary-share.module';
 import { ConfigModule } from '@nestjs/config';
 import { User as UserMongo, UserSchema } from './auth.schema';
 
+UserSchema.virtual('id').get(function() {
+  return this._id.toHexString();
+});
+
+UserSchema.set('toJSON', {
+  virtuals: true,
+});
+
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: UserMongo.name, schema: UserSchema }]),

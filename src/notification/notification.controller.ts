@@ -5,9 +5,11 @@ import {
   ValidationPipe,
   Query,
   Put,
+  Patch,
+  Param,
 } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { SearchNotificationDto } from './notification.dto';
+import { SearchNotificationDto, ParamNotiDto } from './notification.dto';
 import { AuthMeta } from 'src/auth/auth.decorator';
 import { NotificationService } from './notification.service';
 import { TransformResponse, NotificationsResponse } from './notification.model';
@@ -29,20 +31,18 @@ export class NotificationController {
     @AuthMeta() user,
     @Query() dto: SearchNotificationDto,
   ): Promise<NotificationsResponse> {
-    const {
-      result,
-      hasMore,
+    const [
+      { docs, hasNextPage: hasMore, totalDocs },
       totalHNotSeen,
-    } = await this.notificationService.getNotifications({
+    ] = await this.notificationService.getNotifications({
       ...dto,
-      user,
+      user: user.id,
     });
-    const [list, cnt] = result;
     return {
-      notifications: list,
+      notifications: docs,
       totalHNotSeen,
       pagination: {
-        totalItems: cnt,
+        totalItems: totalDocs,
         hasMore,
       },
     };
@@ -56,6 +56,22 @@ export class NotificationController {
   })
   async markAllSeen(@AuthMeta() user): Promise<any> {
     await this.notificationService.markAllSeen(user.id);
+    return {
+      ok: true,
+    };
+  }
+
+  @Put(['/mark-seen/:id'])
+  @ApiBearerAuth('Authorization')
+  @ApiResponse({
+    status: 200,
+    description: 'Update notification',
+  })
+  async updateSeen(
+    @Param() params: ParamNotiDto,
+    @AuthMeta() user,
+  ): Promise<any> {
+    await this.notificationService.markSeen(params.id, user.id);
     return {
       ok: true,
     };

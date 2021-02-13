@@ -35,7 +35,7 @@ export class TagController {
     description: 'get list tags',
     type: TransformResponse(TagsResponse),
   })
-  async getAllTags(@AuthMeta() user): Promise<TagsResponse> {
+  async getAllTags(@AuthMeta() user): Promise<any> {
     const result = await this.tagService.getAllTags(user);
     return {
       tags: result,
@@ -50,10 +50,7 @@ export class TagController {
     type: TransformResponse(TagResponse),
   })
   @UsePipes(new ValidationPipe({ transform: true }))
-  async getDiary(
-    @Param() params: ParamTagDto,
-    @AuthMeta() user,
-  ): Promise<TagResponse> {
+  async getDiary(@Param() params: ParamTagDto, @AuthMeta() user): Promise<any> {
     const res = await this.tagService.getById(params.id, user.id);
     return {
       tag: res,
@@ -114,7 +111,7 @@ export class TagController {
   ): Promise<OnlyId> {
     const newTag = await this.tagService.create({
       ...createTagDto,
-      user,
+      user: user.id,
     });
     return {
       id: newTag.id,

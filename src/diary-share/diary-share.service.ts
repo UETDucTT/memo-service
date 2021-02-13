@@ -1,28 +1,30 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { User } from 'src/auth/auth.entity';
 import { DiaryService } from 'src/diary/diary.service';
-import { In, Repository } from 'typeorm';
 import { DiaryShare } from './diary-share.entity';
+import { Model } from 'mongoose';
+import { InjectModel } from '@nestjs/mongoose';
+import { Share as DiaryShareMongo, ShareDocument } from './diary-share.scheme';
 
 @Injectable()
 export class DiaryShareService {
   constructor(
-    @InjectRepository(DiaryShare)
-    private readonly diaryShareRepo: Repository<DiaryShare>,
     @Inject(forwardRef(() => DiaryService))
     private readonly diaryService: DiaryService,
+    @InjectModel(DiaryShareMongo.name)
+    private shareModel: Model<ShareDocument>,
   ) {}
 
-  bulkCreate(items: any[]) {
-    return this.diaryShareRepo.save(items);
+  async bulkCreate(items: any[]) {
+    return await this.shareModel.insertMany(items);
   }
 
-  async getSharedUser(user: User): Promise<string[]> {
+  async getSharedUser(user: any): Promise<string[]> {
     const allDiaries = await this.diaryService.getAllDiaryOfUser(user.id);
-    const shares = await this.diaryShareRepo.find({
-      where: { diary: { id: In(allDiaries.map(el => el.id)) } },
-    });
+    const shares = await this.shareModel
+      .find({
+        diary: { $in: allDiaries.map(el => el.id) },
+      })
+      .exec();
     return Array.from(new Set(shares.map(el => el.email)));
   }
 }

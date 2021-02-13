@@ -6,10 +6,8 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Model } from 'mongoose';
-import { InjectRepository } from '@nestjs/typeorm';
 import { OAuth2Client } from 'google-auth-library';
 import { TagService, CreateTagDtoWithUser } from 'src/tag/tag.service';
-import { Repository, Not } from 'typeorm';
 import { IdentityService } from '../identity/identity.service';
 import {
   GetSampleTokenDto,
@@ -29,8 +27,6 @@ import { User as UserMongo, UserDocument } from './auth.schema';
 export class AuthService {
   private client: OAuth2Client;
   constructor(
-    @InjectRepository(User)
-    private readonly authRepo: Repository<User>,
     private readonly identityService: IdentityService,
     private readonly redisService: RedisService,
     @Inject(forwardRef(() => TaskService))
@@ -53,17 +49,12 @@ export class AuthService {
 
   async loginGoogle(token?: string) {
     const ticket = await this.client.verifyIdToken({ idToken: token });
-    const {
-      email,
-      name,
-      picture,
-      sub,
-      given_name: givenName,
-      family_name: familyName,
-    } = ticket.getPayload();
-    const user = await this.authRepo.findOne({
-      where: [{ sub: ticket.getUserId() }, { email }],
-    });
+    const { email, name, picture, sub } = ticket.getPayload();
+    const user = await this.userModel
+      .findOne({
+        $or: [{ key: ticket.getUserId() }, { email }],
+      })
+      .exec();
     if (!user) {
       if (this.config.get<number>('service.limitLogin')) {
         throw new HttpException(
@@ -80,14 +71,13 @@ export class AuthService {
           await db.del(items[i]);
         }
       }
-      const newUser = await this.authRepo.save({
+      const newUserObj = new this.userModel({
         email,
         name,
         picture,
-        sub,
-        givenName,
-        familyName,
+        key: sub,
       });
+      const newUser = await newUserObj.save();
       const newTags = [
         { name: 'Công việc', isDefault: true, color: '#009EFF' },
         { name: 'Gia đình', isDefault: true, color: '#FF1300' },
@@ -96,20 +86,16 @@ export class AuthService {
         { name: 'Tình yêu', isDefault: true, color: '#FF0080' },
       ].map(el => ({
         ...el,
-        user: newUser,
+        user: newUser.id,
       })) as CreateTagDtoWithUser[];
       await Promise.all(newTags.map(el => this.tagService.create(el)));
       return this.identityService.generateUserToken(newUser.id);
     }
-    if (!user.sub) {
-      await this.authRepo.save({
-        ...user,
-        sub: ticket.getUserId(),
-        givenName,
-        familyName,
-        picture: user.picture ? user.picture : picture,
-        name: user.name ? user.name : name,
-      });
+    if (!user.key) {
+      user.key = ticket.getUserId();
+      user.picture = user.picture ? user.picture : picture;
+      user.name = user.name ? user.name : name;
+      await user.save();
     }
     return this.identityService.generateUserToken(user.id);
   }
@@ -172,9 +158,6 @@ export class AuthService {
         $or: [{ username: params.username }, { email: params.email }],
       })
       .exec();
-    // const user = await this.authRepo.findOne({
-    //   where: [{ username: params.username }, { email: params.email }],
-    // });
     if (this.config.get<number>('service.limitLogin')) {
       throw new HttpException(
         'Liên hệ với admin và thử lại',
@@ -246,18 +229,17 @@ export class AuthService {
     delete user?.cnt;
     const userCreated = new this.userModel(user);
     const newUser = await userCreated.save();
-    // const newUser = await this.authRepo.save(user);
-    // const newTags = [
-    //   { name: 'Công việc', isDefault: true, color: '#009EFF' },
-    //   { name: 'Gia đình', isDefault: true, color: '#FF1300' },
-    //   { name: 'Học tập', isDefault: true, color: '#B900FF' },
-    //   { name: 'Chuyến đi', isDefault: true, color: '#45CF09' },
-    //   { name: 'Tình yêu', isDefault: true, color: '#FF0080' },
-    // ].map(el => ({
-    //   ...el,
-    //   user: newUser,
-    // })) as CreateTagDtoWithUser[];
-    // await Promise.all(newTags.map(el => this.tagService.create(el)));
+    const newTags = [
+      { name: 'Công việc', isDefault: true, color: '#009EFF' },
+      { name: 'Gia đình', isDefault: true, color: '#FF1300' },
+      { name: 'Học tập', isDefault: true, color: '#B900FF' },
+      { name: 'Chuyến đi', isDefault: true, color: '#45CF09' },
+      { name: 'Tình yêu', isDefault: true, color: '#FF0080' },
+    ].map(el => ({
+      ...el,
+      user: newUser.id,
+    })) as CreateTagDtoWithUser[];
+    await Promise.all(newTags.map(el => this.tagService.create(el)));
     await db.del(token);
     return newUser;
   }
@@ -321,7 +303,6 @@ export class AuthService {
         { password: pwd },
       )
       .exec();
-    console.log(userUpdate);
     await db.del(token);
     return { id: userUpdate.id };
   }
@@ -331,7 +312,7 @@ export class AuthService {
     if (passwordSystem !== 'test') {
       return Promise.reject(new Error('Password wrong, contact DUCTT'));
     }
-    const user = await this.authRepo.findOne({ where: { email } });
+    const user = await this.userModel.findOne({ email }).exec();
     if (!user) {
       return Promise.reject(new Error('Email not exist, contact DUCTT'));
     }
@@ -343,18 +324,20 @@ export class AuthService {
   }
 
   async findById(id: any): Promise<any> {
-    return await this.userModel.findById(id);
+    return await this.userModel.findById(id).select('-password');
   }
 
-  async find(condition: any): Promise<User[]> {
-    return await this.authRepo.find(condition);
+  async find(condition: any): Promise<any> {
+    return await this.userModel.find(condition);
   }
 
-  async update(id: number, params: UpdateProfileDto) {
+  async update(id: string, params: UpdateProfileDto) {
     if (params.username) {
-      const user = await this.authRepo.findOne({
-        where: { id: Not(id), username: params.username },
-      });
+      const user = await this.userModel
+        .findOne({
+          $and: [{ username: params.username }, { _id: { $ne: id } }],
+        })
+        .exec();
       if (user) {
         throw new HttpException(
           'Tên tài khoản đã tồn tại',
@@ -362,10 +345,12 @@ export class AuthService {
         );
       }
     }
-    return await this.authRepo.update({ id }, params);
+    return await this.userModel.findOneAndUpdate({ _id: id }, params, {
+      strict: false,
+    });
   }
 
   async getAllUser() {
-    return await this.authRepo.find();
+    return await this.userModel.find().select('-password');
   }
 }
