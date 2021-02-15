@@ -4,11 +4,34 @@ volumes:
   redis_master_data: {}
 
 services:
-  redis-master:
-    image: 'bitnami/redis:latest'
-    ports:
-      - '6379:6379'
-    environment:
-      - ALLOW_EMPTY_PASSWORD=yes
+  app:
+    image: memo-service
     volumes:
-      - 'redis_master_data:/bitnami'
+      - ./:/app # mount từ môi trường gốc vào trong để nếu các bạn thay đổi code thì bên trong sẽ tự động cập nhật
+    environment: # phần này ta định nghĩa ở file .env nhé
+      - REDIS_URL=${REDIS_URL}
+      - DOMAIN_CLIENT=${DOMAIN_CLIENT}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - MAIL_HOST=${MAIL_HOST}
+      - MAIL_PORT=${MAIL_PORT}
+      - MAIL_USER=${MAIL_USER}
+      - MAIL_PASS=${MAIL_PASS}
+      - LIMIT_LOGIN=${LIMIT_LOGIN}
+    ports:
+      - '3000:3000' # phần này ta định nghĩa ở file .env nhé
+    restart: unless-stopped
+    depends_on:
+      - redis
+      - db
+
+  db:
+    image: mongo
+    volumes:
+      - .docker/data/db:/data/db
+    restart: unless-stopped
+
+  redis:
+    image: redis:5-alpine
+    volumes:
+      - .docker/data/redis:/data
+    restart: unless-stopped
