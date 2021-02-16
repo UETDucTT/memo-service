@@ -122,6 +122,7 @@ export class AuthService {
           { email: params.usernameOrEmail },
         ],
       })
+      .select('username email password')
       .exec();
     if (!user) {
       throw new HttpException(

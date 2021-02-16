@@ -37,7 +37,7 @@ export class User {
   @ApiProperty()
   username: string;
 
-  @Prop()
+  @Prop({ select: false })
   @ApiProperty({ writeOnly: true })
   password: string;
 }
