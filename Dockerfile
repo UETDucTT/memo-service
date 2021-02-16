@@ -1,32 +1,29 @@
-# FROM node:12-alpine as builder
+FROM node:13-alpine As development
+ENV NODE_OPTIONS --max_old_space_size=8192
 
-# ENV NODE_OPTIONS --max_old_space_size=8192
-# RUN yarn global add @nestjs/cli
-# WORKDIR /build
-# COPY libs ./libs
-# COPY package.json yarn.lock  ./
-# COPY patches ./patches
-# RUN yarn install
-# COPY . .
-# RUN yarn build
+WORKDIR /usr/src/app
 
-# FROM node:12-alpine
+COPY package*.json ./
 
-# WORKDIR /app
-# COPY libs ./libs
-# COPY package.json yarn.lock ./
-# RUN yarn install --production
-# COPY --from=builder /build/dist .
-# ENV NODE_ENV production
-# EXPOSE 3000
-# CMD ["main.js"]
-FROM node:13-alpine
-
-WORKDIR /app
+RUN npm install --only=development
 
 COPY . .
 
-RUN npm install
+RUN npm run build
 
-# Development
-CMD ["npm", "run", "start:dev"]
+FROM node:13-alpine as production
+
+ARG NODE_ENV=production
+ENV NODE_ENV=${NODE_ENV}
+
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+
+RUN npm install --only=production
+
+COPY . .
+
+COPY --from=development /usr/src/app/dist ./dist
+
+CMD ["node", "dist/main"]

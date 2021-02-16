@@ -1,6 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { DiaryService } from 'src/diary/diary.service';
-import { DiaryShare } from './diary-share.entity';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Share as DiaryShareMongo, ShareDocument } from './diary-share.scheme';

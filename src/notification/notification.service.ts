@@ -1,8 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Notification } from './notification.entity';
-import { Repository } from 'typeorm';
-import { User } from 'src/auth/auth.entity';
 import { SearchNotificationDto } from './notification.dto';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
@@ -24,8 +20,6 @@ type SearchNotificationDtoWithUser = SearchNotificationDto & {
 @Injectable()
 export class NotificationService {
   constructor(
-    @InjectRepository(Notification)
-    private readonly notificationRepo: Repository<Notification>,
     @InjectModel(NotificationMongo.name)
     private notificationModel: Model<NotificationDocument>,
   ) {}

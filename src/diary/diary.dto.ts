@@ -9,14 +9,11 @@ import {
   IsArray,
   IsOptional,
   IsDateString,
-  IsUUID,
   IsEmail,
-  isUUID,
-  IsDate,
   IsMongoId,
 } from 'class-validator';
 import { Type } from 'src/resource/resource.entity';
-import { Emotion, Status } from './diary.entity';
+import { Status } from './diary.entity';
 
 export class ResourceDto {
   @ApiProperty({ enum: Type })

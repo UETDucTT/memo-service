@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { MongooseModule } from '@nestjs/mongoose';
 import identityConfig from './config/identity.config';
 import serviceConfig from './config/service.config';
@@ -25,7 +24,6 @@ import { DiaryShareModule } from './diary-share/diary-share.module';
         return connection;
       },
     }),
-    TypeOrmModule.forRoot(),
     ConfigModule.forRoot({
       load: [serviceConfig, identityConfig],
     }),

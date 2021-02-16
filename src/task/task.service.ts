@@ -1,8 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
-import { Diary } from 'src/diary/diary.entity';
 import { ConfigService } from '@nestjs/config';
-import { Interval } from '@nestjs/schedule';
 import { NotificationGateway } from 'src/notification/notification.gateway';
 import { AuthService } from 'src/auth/auth.service';
 import { NotificationService } from 'src/notification/notification.service';
@@ -25,12 +23,6 @@ export class TaskService {
       email: { $in: emails },
     });
     if (users && users.length) {
-      this.notificationGateway.sendToUser(
-        users.map(el => el.id),
-        {
-          diary,
-        },
-      );
       const notifications = users.map(el => {
         return {
           user: el.id,
@@ -40,7 +32,10 @@ export class TaskService {
           }),
         };
       });
-      this.notificationService.bulkCreateNotification(notifications);
+      const results = await this.notificationService.bulkCreateNotification(
+        notifications,
+      );
+      this.notificationGateway.sendToUser(results);
     }
     const emailSendByMailService = emails.filter(
       el => !users.map(item => item.email).includes(el),

@@ -15,7 +15,6 @@ import {
   UpdateProfileDto,
   RegisterDto,
 } from './auth.dto';
-import { User } from './auth.entity';
 import bcrypt from 'bcrypt';
 import { InjectModel } from '@nestjs/mongoose';
 import { RedisService } from 'src/redis/redis.service';

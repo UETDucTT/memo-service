@@ -4,11 +4,9 @@ import {
   MiddlewareConsumer,
   forwardRef,
 } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { User } from './auth.entity';
 import { IdentityModule } from 'src/identity/identity.module';
 import { IdentityMiddleware } from 'src/identity/identity.middleware';
 import { TagModule } from 'src/tag/tag.module';
@@ -28,7 +26,6 @@ UserSchema.set('toJSON', {
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: UserMongo.name, schema: UserSchema }]),
-    TypeOrmModule.forFeature([User]),
     IdentityModule,
     forwardRef(() => TagModule),
     forwardRef(() => TaskModule),

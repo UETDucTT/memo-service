@@ -28,7 +28,6 @@ import {
   RequestForgotPasswordDto,
   ResetPasswordDto,
 } from './auth.dto';
-import { User } from './auth.entity';
 import { OnlyId, UserOverviewResponse } from 'src/diary/diary.model';
 import { TransformInterceptor } from './transform.inteceptor';
 import { DiaryShareService } from 'src/diary-share/diary-share.service';

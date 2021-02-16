@@ -27,11 +27,11 @@ export class NotificationGateway
     client.join(userId);
   }
 
-  sendToUser(userIds: string[], payload: any): void {
+  sendToUser(arrayNoti: any[]): void {
     const roomIds = Object.keys(this.server.sockets.adapter.rooms);
-    userIds.forEach((el: string) => {
-      if (roomIds.includes(el)) {
-        this.server.to(el).emit('push-noti', payload);
+    arrayNoti.forEach((el: any) => {
+      if (roomIds.includes(el.user.toString())) {
+        this.server.to(el.user).emit('push-noti', el);
       }
     });
   }

@@ -6,8 +6,6 @@ import {
   forwardRef,
 } from '@nestjs/common';
 import { NotificationGateway } from './notification.gateway';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Notification } from './notification.entity';
 import { NotificationService } from './notification.service';
 import { IdentityModule } from 'src/identity/identity.module';
 import { IdentityMiddleware } from 'src/identity/identity.middleware';
@@ -33,7 +31,6 @@ NotificationSchema.set('toJSON', {
     MongooseModule.forFeature([
       { name: NotificationMongo.name, schema: NotificationSchema },
     ]),
-    TypeOrmModule.forFeature([Notification]),
     IdentityModule,
     forwardRef(() => AuthModule),
   ],

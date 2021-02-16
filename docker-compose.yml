@@ -1,37 +1,41 @@
-version: '3'
+version: '3.7'
 
+networks:
+  webnet:
 volumes:
-  redis_master_data: {}
+  mongodata:
 
 services:
   app:
-    image: memo-service
+    container_name: main
+    build:
+      context: .
+      target: development
     volumes:
-      - ./:/app # mount từ môi trường gốc vào trong để nếu các bạn thay đổi code thì bên trong sẽ tự động cập nhật
-    environment: # phần này ta định nghĩa ở file .env nhé
-      - REDIS_URL=${REDIS_URL}
-      - DOMAIN_CLIENT=${DOMAIN_CLIENT}
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      - MAIL_HOST=${MAIL_HOST}
-      - MAIL_PORT=${MAIL_PORT}
-      - MAIL_USER=${MAIL_USER}
-      - MAIL_PASS=${MAIL_PASS}
-      - LIMIT_LOGIN=${LIMIT_LOGIN}
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
     ports:
-      - '3000:3000' # phần này ta định nghĩa ở file .env nhé
-    restart: unless-stopped
+      - 3000:3000
+    command: npm run start:dev
+    env_file:
+      - .env
+    networks:
+      - webnet
     depends_on:
       - redis
       - db
 
   db:
+    container_name: mongodb
     image: mongo
+    networks:
+      - webnet
     volumes:
-      - .docker/data/db:/data/db
+      - mongodata:/data/db
     restart: unless-stopped
 
   redis:
-    image: redis:5-alpine
-    volumes:
-      - .docker/data/redis:/data
-    restart: unless-stopped
+    container_name: redis
+    image: redis:5
+    networks:
+      - webnet

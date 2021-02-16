@@ -1,10 +1,8 @@
 import { Expose } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import { Diary } from './diary.entity';
-import { DiaryResource } from 'src/resource/resource.entity';
+import { Diary } from './diary.schema';
 import { PaginationResponse } from 'src/types';
-import { User } from 'src/auth/auth.entity';
-import { DiaryShare } from 'src/diary-share/diary-share.entity';
+import { User } from '../auth/auth.schema';
 
 export type ClassType<T = any> = new (...args: any[]) => T;
 
@@ -18,27 +16,21 @@ export class OnlyId {
   id: string | number;
 }
 
-type Resource = Omit<DiaryResource, 'createdAt' | 'updatedAt'>;
-
-type DiaryItem = Omit<Diary, 'resource'> & {
-  resources: Resource[];
-};
-
 export class DiariesResponse {
-  diaries: DiaryItem[];
+  diaries: Diary[];
   pagination: PaginationResponse;
 }
 
 export class DiaryResponse {
   @ApiProperty()
   @Expose()
-  diary: DiaryItem;
+  diary: Diary;
 }
 
 export class HistoryShareResponse {
   @ApiProperty()
   @Expose()
-  shares: DiaryShare[];
+  shares: any[];
 }
 
 export class SummaryDiariesResponse {

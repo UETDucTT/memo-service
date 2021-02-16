@@ -5,8 +5,6 @@ import {
   RequestMethod,
   forwardRef,
 } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Diary } from './diary.entity';
 import { IdentityModule } from 'src/identity/identity.module';
 import { IdentityMiddleware } from 'src/identity/identity.middleware';
 import { AuthModule } from 'src/auth/auth.module';
@@ -29,7 +27,6 @@ DiarySchema.set('toJSON', {
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: DiaryMongo.name, schema: DiarySchema }]),
-    TypeOrmModule.forFeature([Diary]),
     IdentityModule,
     forwardRef(() => AuthModule),
     forwardRef(() => TaskModule),
