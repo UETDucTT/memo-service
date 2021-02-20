@@ -141,15 +141,15 @@ export class SearchDiaryDto {
   @IsMongoId({ each: true })
   tag: string[];
 
-  // @ApiProperty({ required: false, default: 1 })
-  // @IsOptional()
-  // @Transform(({ value: val }) => {
-  //   if (isNaN(parseInt(val?.toString())) || parseInt(val?.toString()) <= 0) {
-  //     throw new BadRequestException('page validation fail');
-  //   }
-  //   return parseInt(val?.toString());
-  // })
-  // page: number;
+  @ApiProperty({ required: false, default: 1 })
+  @IsOptional()
+  @Transform(({ value: val }) => {
+    if (isNaN(parseInt(val?.toString())) || parseInt(val?.toString()) <= 0) {
+      throw new BadRequestException('page validation fail');
+    }
+    return parseInt(val?.toString());
+  })
+  page: number;
 
   @ApiProperty({ required: false, default: 10 })
   @IsOptional()

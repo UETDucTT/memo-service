@@ -223,12 +223,16 @@ export class DiaryService {
   }
 
   buildParams(params: SearchDiaryDtoWithUser) {
-    let { pageSize, q, fromDate, toDate, user, lastId, ...rest } = params;
+    let { page, pageSize, q, fromDate, toDate, user, lastId, ...rest } = params;
+    if (!lastId && !page) {
+      page = 1;
+    }
     if (!pageSize) {
       pageSize = 10;
     }
     return {
       ...rest,
+      page,
       pageSize,
       q,
       fromDate,
@@ -240,6 +244,7 @@ export class DiaryService {
 
   async getList(params: SearchDiaryDtoWithUser) {
     const {
+      page,
       pageSize,
       q,
       fromDate,
@@ -301,7 +306,7 @@ export class DiaryService {
           ],
         },
         {
-          page: 1,
+          page,
           limit: pageSize,
           populate: 'tags',
           sort: '-createdAt',

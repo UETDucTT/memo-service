@@ -29,7 +29,10 @@ export class NotificationService {
   }
 
   async getNotifications(params: SearchNotificationDtoWithUser) {
-    let { pageSize, lastId, user } = params;
+    let { page, pageSize, lastId, user } = params;
+    if (!lastId && !page) {
+      page = 1;
+    }
     if (!pageSize) {
       pageSize = 10;
     }
@@ -48,7 +51,7 @@ export class NotificationService {
             user,
           },
           {
-            page: 1,
+            page,
             limit: pageSize,
             populate: 'user',
             sort: '-createdAt',
