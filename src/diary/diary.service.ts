@@ -42,7 +42,7 @@ export class DiaryService {
   ) {}
 
   async getSummaryDiaries(userId: string, params: SearchDiaryDto) {
-    const { q, fromDate, toDate, tag } = params;
+    const { q, fromDate, toDate, tag, pinned } = params;
     let betweenCondition = {};
 
     let inCondition = {};
@@ -76,6 +76,19 @@ export class DiaryService {
       };
     }
 
+    let pinnedCondition = {};
+    if (pinned !== undefined) {
+      if (pinned) {
+        pinnedCondition = {
+          pinned: true,
+        };
+      } else {
+        pinnedCondition = {
+          pinned: { $ne: true },
+        };
+      }
+    }
+
     const totalDiaries = await this.diaryModel
       .find({ user: userId })
       .countDocuments()
@@ -85,6 +98,7 @@ export class DiaryService {
       .find({
         $and: [
           { user: userId },
+          { ...pinnedCondition },
           { ...betweenCondition },
           { ...inCondition },
           {
@@ -252,11 +266,24 @@ export class DiaryService {
       user,
       lastId,
       tag,
+      pinned,
     } = this.buildParams(params);
     let betweenCondition = {};
 
     let inCondition = {};
 
+    let pinnedCondition = {};
+    if (pinned !== undefined) {
+      if (pinned) {
+        pinnedCondition = {
+          pinned: true,
+        };
+      } else {
+        pinnedCondition = {
+          pinned: { $ne: true },
+        };
+      }
+    }
     if (tag) {
       inCondition = {
         tags: { $in: tag },
@@ -286,80 +313,45 @@ export class DiaryService {
       };
     }
 
-    if (!lastId) {
-      const result = await (this.diaryModel as any).paginate(
+    const whereQuery = {
+      $and: [
+        { user },
+        { ...pinnedCondition },
+        { ...betweenCondition },
+        { ...inCondition },
         {
-          $and: [
-            { user },
-            { ...betweenCondition },
-            { ...inCondition },
+          $or: [
             {
-              $or: [
-                {
-                  title: { $regex: `.*${q || ''}.*`, $options: 'i' },
-                },
-                {
-                  content: { $regex: `.*${q || ''}.*`, $options: 'i' },
-                },
-              ],
+              title: { $regex: `.*${q || ''}.*`, $options: 'i' },
+            },
+            {
+              content: { $regex: `.*${q || ''}.*`, $options: 'i' },
             },
           ],
         },
-        {
-          page,
-          limit: pageSize,
-          populate: 'tags',
-          sort: '-createdAt',
-        },
-      );
+      ],
+    };
+
+    if (!lastId) {
+      const result = await (this.diaryModel as any).paginate(whereQuery, {
+        page,
+        limit: pageSize,
+        populate: 'tags',
+        sort: '-createdAt',
+      });
       return result;
     } else {
       const allElements = await this.diaryModel
-        .find({
-          $and: [
-            { user },
-            { ...betweenCondition },
-            { ...inCondition },
-            {
-              $or: [
-                {
-                  title: { $regex: `.*${q || ''}.*`, $options: 'i' },
-                },
-                {
-                  content: { $regex: `.*${q || ''}.*`, $options: 'i' },
-                },
-              ],
-            },
-          ],
-        })
+        .find(whereQuery)
         .sort('-createdAt')
         .exec();
       const idx = allElements.findIndex(el => el.id === lastId);
-      return await (this.diaryModel as any).paginate(
-        {
-          $and: [
-            { user },
-            { ...betweenCondition },
-            { ...inCondition },
-            {
-              $or: [
-                {
-                  title: { $regex: `.*${q || ''}.*`, $options: 'i' },
-                },
-                {
-                  content: { $regex: `.*${q || ''}.*`, $options: 'i' },
-                },
-              ],
-            },
-          ],
-        },
-        {
-          offset: idx + 1,
-          limit: pageSize,
-          populate: 'tags',
-          sort: '-createdAt',
-        },
-      );
+      return await (this.diaryModel as any).paginate(whereQuery, {
+        offset: idx + 1,
+        limit: pageSize,
+        populate: 'tags',
+        sort: '-createdAt',
+      });
     }
   }
 

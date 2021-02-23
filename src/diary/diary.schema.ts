@@ -76,6 +76,9 @@ export class Diary {
   @Prop({ required: true })
   time: Date;
 
+  @Prop({ required: false, default: false })
+  pinned: boolean;
+
   @Prop({ type: [{ type: ResourceSchema }] })
   resources: Resource[];
 

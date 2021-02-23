@@ -11,6 +11,7 @@ import {
   IsDateString,
   IsEmail,
   IsMongoId,
+  IsBoolean,
 } from 'class-validator';
 import { Type } from 'src/resource/resource.entity';
 import { Status } from './diary.entity';
@@ -99,6 +100,11 @@ export class EditDiaryDto {
   @IsString()
   content?: string;
 
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsBoolean()
+  pinned?: boolean;
+
   @ApiProperty({ enum: Status, default: Status.private })
   @IsOptional()
   @IsEnum(Status)
@@ -150,6 +156,16 @@ export class SearchDiaryDto {
     return parseInt(val?.toString());
   })
   page: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @Transform(({ value: val }) => {
+    if (val !== 'true' && val !== 'false') {
+      throw new BadRequestException('pinned validation fail');
+    }
+    return val === 'true';
+  })
+  pinned: boolean;
 
   @ApiProperty({ required: false, default: 10 })
   @IsOptional()
