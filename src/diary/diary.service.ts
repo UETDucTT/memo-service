@@ -41,7 +41,11 @@ export class DiaryService {
     private diaryModel: Model<DiaryDocument>,
   ) {}
 
-  async getSummaryDiaries(userId: string, params: SearchDiaryDto) {
+  async getSummaryDiaries(
+    userId: string,
+    params: SearchDiaryDto,
+    startDateToday: Date,
+  ) {
     const { q, fromDate, toDate, tag, pinned } = params;
     let betweenCondition = {};
 
@@ -121,8 +125,8 @@ export class DiaryService {
           { user: userId },
           {
             time: {
-              $gte: new Date(),
-              $lte: addDays(new Date(), 1),
+              $gte: startDateToday,
+              $lte: addDays(startDateToday, 1),
             },
           },
         ],

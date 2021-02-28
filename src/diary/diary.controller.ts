@@ -10,6 +10,7 @@ import {
   Delete,
   Patch,
   UseInterceptors,
+  Headers,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -52,8 +53,21 @@ export class DiaryController {
   async getSummaryDiaries(
     @AuthMeta() user,
     @Query() dto: SearchDiaryDto,
+    @Headers() headers: any,
   ): Promise<SummaryDiariesResponse> {
-    const res = await this.diaryService.getSummaryDiaries(user.id, dto);
+    const clientTimezoneOffset = parseInt(headers['x-timezone-offset']) || 0;
+    const x = new Date();
+    x.setHours(0, 0, 0, 0);
+    const currTimezoneOffset = x.getTimezoneOffset();
+    console.log(x.toISOString(), currTimezoneOffset);
+    const startTimeToday = new Date(
+      x.getTime() + (currTimezoneOffset - clientTimezoneOffset) * 60 * 1000,
+    );
+    const res = await this.diaryService.getSummaryDiaries(
+      user.id,
+      dto,
+      startTimeToday,
+    );
     return res;
   }
 
