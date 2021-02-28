@@ -61,7 +61,7 @@ export class DiaryController {
     const currTimezoneOffset = x.getTimezoneOffset();
     console.log(x.toISOString(), currTimezoneOffset);
     const startTimeToday = new Date(
-      x.getTime() + (currTimezoneOffset - clientTimezoneOffset) * 60 * 1000,
+      x.getTime() + (clientTimezoneOffset - currTimezoneOffset) * 60 * 1000,
     );
     const res = await this.diaryService.getSummaryDiaries(
       user.id,
