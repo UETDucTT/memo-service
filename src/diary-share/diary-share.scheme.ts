@@ -7,11 +7,20 @@ import mongoose from 'mongoose';
   timestamps: true,
 })
 export class Share {
-  @Prop({ required: true })
-  email: string;
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true })
+  sender: string;
+
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false })
+  receiver: string;
+
+  @Prop({ required: false })
+  receiverEmail: string;
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Diary', required: true })
-  diary: string;
+  record: string;
+
+  @Prop({ required: true })
+  time: Date;
 }
 
 export type ShareDocument = Share & Document;

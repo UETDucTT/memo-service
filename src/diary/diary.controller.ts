@@ -23,7 +23,7 @@ import {
   SearchDiaryDto,
   ParamDiaryDto,
   EditDiaryDto,
-  TriggerSandEmailDto,
+  TriggerShareDiaryDto,
 } from './diary.dto';
 import { AuthMeta } from 'src/auth/auth.decorator';
 import {
@@ -59,7 +59,6 @@ export class DiaryController {
     const x = new Date();
     x.setHours(0, 0, 0, 0);
     const currTimezoneOffset = x.getTimezoneOffset();
-    console.log(x.toISOString(), currTimezoneOffset);
     const startTimeToday = new Date(
       x.getTime() + (clientTimezoneOffset - currTimezoneOffset) * 60 * 1000,
     );
@@ -99,6 +98,51 @@ export class DiaryController {
     };
   }
 
+  @Get(['/share-with-me'])
+  @ApiBearerAuth('Authorization')
+  @ApiResponse({
+    status: 200,
+    description: 'get list diaries',
+    type: TransformResponse(DiariesResponse),
+  })
+  async getDiariesShareWithMe(
+    @AuthMeta() user,
+    @Query() dto: SearchDiaryDto,
+  ): Promise<any> {
+    const {
+      docs,
+      hasNextPage: hasMore,
+      totalDocs,
+    } = await this.diaryService.getDiaryShareWithMe({
+      ...dto,
+      user,
+    });
+    return {
+      diaries: docs,
+      pagination: {
+        totalItems: totalDocs,
+        hasMore,
+      },
+    };
+  }
+
+  @Get(['/share-with-me/:id'])
+  @ApiBearerAuth('Authorization')
+  @ApiResponse({
+    status: 200,
+    description: 'get diariy share',
+    type: TransformResponse(DiaryResponse),
+  })
+  async getDiaryShareWithMe(
+    @Param() params: ParamDiaryDto,
+    @AuthMeta() user,
+  ): Promise<any> {
+    const res = await this.diaryService.getShareById(params.id, user.id);
+    return {
+      diary: res,
+    };
+  }
+
   @Get(['/:id'])
   @ApiBearerAuth('Authorization')
   @ApiResponse({
@@ -114,6 +158,24 @@ export class DiaryController {
     const res = await this.diaryService.getById(params.id, user.id);
     return {
       diary: res,
+    };
+  }
+
+  @Get(['/:id/shares'])
+  @ApiBearerAuth('Authorization')
+  @ApiResponse({
+    status: 200,
+    description: 'get list shared user one diary',
+    type: TransformResponse(DiaryResponse),
+  })
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async getDiaryShares(
+    @Param() params: ParamDiaryDto,
+    @AuthMeta() user,
+  ): Promise<any> {
+    const res = await this.diaryService.getListSharesById(params.id, user);
+    return {
+      users: res,
     };
   }
 
@@ -136,13 +198,13 @@ export class DiaryController {
   @ApiResponse({
     status: 200,
     description: 'send email',
-    type: TransformResponse(TriggerSandEmailDto),
+    type: TransformResponse(TriggerShareDiaryDto),
   })
   async triggerSendEmail(
-    @Body() triggleSendEmailDto: TriggerSandEmailDto,
+    @Body() triggleShareDiaryDto: TriggerShareDiaryDto,
     @AuthMeta() user,
   ): Promise<any> {
-    await this.diaryService.shareDiary(triggleSendEmailDto, user);
+    await this.diaryService.shareDiary(triggleShareDiaryDto, user);
     return {
       success: true,
     };

@@ -40,6 +40,6 @@ export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(IdentityMiddleware)
-      .forRoutes('auth/me', 'auth/all-users', 'auth/shared-emails');
+      .forRoutes('auth/me', 'auth/shared-users');
   }
 }

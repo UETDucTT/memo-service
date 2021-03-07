@@ -9,7 +9,7 @@ import {
   CreateDiaryDto,
   SearchDiaryDto,
   EditDiaryDto,
-  TriggerSandEmailDto,
+  TriggerShareDiaryDto,
 } from './diary.dto';
 import { Status } from './diary.entity';
 import { addDays, maxTime } from 'date-fns';
@@ -19,6 +19,7 @@ import { DiaryShareService } from 'src/diary-share/diary-share.service';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Diary as DiaryMongo, DiaryDocument } from './diary.schema';
+import { AuthService } from 'src/auth/auth.service';
 
 type CreateDiaryDtoWithUser = CreateDiaryDto & {
   user: string;
@@ -37,6 +38,8 @@ export class DiaryService {
     private readonly tagService: TagService,
     @Inject(forwardRef(() => TaskService))
     private taskService: TaskService,
+    @Inject(forwardRef(() => AuthService))
+    private userService: AuthService,
     @InjectModel(DiaryMongo.name)
     private diaryModel: Model<DiaryDocument>,
   ) {}
@@ -229,6 +232,25 @@ export class DiaryService {
     return diary;
   }
 
+  async getShareById(id: string, receiverId: string) {
+    const shares = await this.diaryShareService.find({
+      record: id,
+      receiver: receiverId,
+    });
+    if (!shares.length) {
+      throw new NotFoundException(`Diary with id ${id} non-public`);
+    }
+    const diary = await this.diaryModel
+      .findOne({ $and: [{ _id: id }] })
+      .populate('tags')
+      .populate('user', '-password')
+      .exec();
+    if (!diary) {
+      throw new NotFoundException(`Diary with id ${id} not found`);
+    }
+    return diary;
+  }
+
   async deleteById(id: string, userId: string): Promise<string> {
     const diary = await this.diaryModel.findOne({
       $and: [{ _id: id }, { user: userId }],
@@ -359,23 +381,87 @@ export class DiaryService {
     }
   }
 
-  async shareDiary(triggleSendEmailDto: TriggerSandEmailDto, user: any) {
+  async getDiaryShareWithMe(params: SearchDiaryDtoWithUser) {
+    const { page, pageSize, q, user } = this.buildParams(params);
+    const listRecords = await this.diaryShareService.getSharedRecordByReceiverId(
+      user,
+    );
+    let inCondition = {
+      _id: { $in: listRecords },
+    };
+
+    const whereQuery = {
+      $and: [
+        { ...inCondition },
+        {
+          $or: [
+            {
+              title: { $regex: `.*${q || ''}.*`, $options: 'i' },
+            },
+            {
+              content: { $regex: `.*${q || ''}.*`, $options: 'i' },
+            },
+          ],
+        },
+      ],
+    };
+    const result = await (this.diaryModel as any).paginate(whereQuery, {
+      page,
+      limit: pageSize,
+      populate: [{ path: 'tags' }, { path: 'user', select: '-password' }],
+      sort: '-createdAt',
+    });
+    return result;
+  }
+
+  async shareDiary(triggleSendEmailDto: TriggerShareDiaryDto, user: any) {
     const diary = await this.diaryModel
       .findOne({
         $and: [{ _id: triggleSendEmailDto.id }, { user: user.id }],
       })
       .populate('user');
-    if (!diary || diary.status !== Status.public) {
+    if (!diary) {
       throw new BadRequestException(
-        `Diary with id ${triggleSendEmailDto.id} not found or non-public`,
+        `Diary with id ${triggleSendEmailDto.id} not found`,
       );
     }
-    await this.diaryShareService.bulkCreate(
-      triggleSendEmailDto.emails.map(el => ({
-        email: el,
-        diary: diary.id,
-      })),
+    const shares: any[] = [];
+    const users = await this.userService.find({
+      email: { $in: triggleSendEmailDto.emails },
+    });
+    const remainEmails = triggleSendEmailDto.emails.filter(
+      el => !users.map(u => u.email).includes(el),
     );
+    if (!!remainEmails.length && diary.status === Status.private) {
+      await this.diaryModel.findOneAndUpdate(
+        { _id: diary.id },
+        {
+          status: Status.public,
+        } as any,
+        {
+          strict: false,
+        },
+      );
+    }
+    users.forEach(el => {
+      shares.push({
+        sender: user.id,
+        receiver: el.id,
+        receiverEmail: el.email,
+        time: new Date(),
+        record: triggleSendEmailDto.id,
+      });
+    });
+    remainEmails.forEach(el => {
+      shares.push({
+        sender: user.id,
+        receiver: null,
+        receiverEmail: el,
+        time: new Date(),
+        record: triggleSendEmailDto.id,
+      });
+    });
+    await this.diaryShareService.bulkCreate(shares);
     this.taskService.sendEmailShareDiary(
       diary as any,
       triggleSendEmailDto.emails.filter(el => el !== user.email),
@@ -384,5 +470,15 @@ export class DiaryService {
 
   async getAllDiaryOfUser(userId: string) {
     return await this.diaryModel.find({ user: userId }).exec();
+  }
+
+  async getListSharesById(diaryId: string, _user: any) {
+    const diary = await this.diaryModel.findOne({
+      $and: [{ _id: diaryId }, { user: _user.id }],
+    });
+    if (!diary) {
+      throw new NotFoundException(`Diary with id ${diaryId} not found`);
+    }
+    return await this.diaryShareService.getSharedUserByDiaryId(_user, diaryId);
   }
 }

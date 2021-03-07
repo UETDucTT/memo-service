@@ -199,7 +199,7 @@ export class ParamDiaryDto {
   id: string;
 }
 
-export class TriggerSandEmailDto {
+export class TriggerShareDiaryDto {
   @ApiProperty()
   @IsDefined()
   @IsMongoId()

@@ -17,13 +17,59 @@ export class DiaryShareService {
     return await this.shareModel.insertMany(items);
   }
 
-  async getSharedUser(user: any): Promise<string[]> {
-    const allDiaries = await this.diaryService.getAllDiaryOfUser(user.id);
-    const shares = await this.shareModel
-      .find({
-        diary: { $in: allDiaries.map(el => el.id) },
-      })
+  async getSharedUser(user: any) {
+    const listReceiver = await this.shareModel
+      .find(
+        { sender: user.id },
+        {
+          sender: 1,
+          receiverEmail: 1,
+          receiver: 1,
+          record: 1,
+        },
+      )
+      .populate('receiver')
       .exec();
-    return Array.from(new Set(shares.map(el => el.email)));
+    let emails = [];
+    let result = [];
+    listReceiver.forEach(el => {
+      if (!emails.includes(el.receiverEmail)) {
+        emails.push(el.receiverEmail);
+        result.push({
+          email: el.receiverEmail,
+          username: el.receiver ? (el.receiver as any).username : null,
+          name: el.receiver ? (el.receiver as any).name : null,
+          picture: el.receiver ? (el.receiver as any).picture : null,
+        });
+      }
+    });
+    return result;
+  }
+
+  async getSharedUserByDiaryId(user: any, diaryId?: string) {
+    const listReceiver = await this.shareModel
+      .find({ record: diaryId, sender: user.id })
+      .populate('receiver', 'username name picture email')
+      .exec();
+    let emails = [];
+    let result = [];
+    listReceiver.forEach(el => {
+      if (!emails.includes(el.receiverEmail)) {
+        emails.push(el.receiverEmail);
+        result.push(el);
+      }
+    });
+    return result;
+  }
+
+  async getSharedRecordByReceiverId(receiverId: string) {
+    const listShares = await this.shareModel
+      .find({ receiver: receiverId })
+      .exec();
+    return listShares.map(el => el.record);
+  }
+
+  async find(condition: any) {
+    return this.shareModel.find(condition);
   }
 }

@@ -120,17 +120,17 @@ export class AuthController {
     return user;
   }
 
-  @Get(['/all-users'])
-  @ApiBearerAuth('Authorization')
-  @ApiResponse({
-    status: 200,
-    description: 'Get all user',
-    type: TransformResponse(UserOverviewResponse),
-  })
-  async getAllUsers(@AuthMeta() _user): Promise<any> {
-    const users = await this.authService.getAllUser();
-    return { users };
-  }
+  // @Get(['/all-users'])
+  // @ApiBearerAuth('Authorization')
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'Get all user',
+  //   type: TransformResponse(UserOverviewResponse),
+  // })
+  // async getAllUsers(@AuthMeta() _user): Promise<any> {
+  //   const users = await this.authService.getAllUser();
+  //   return { users };
+  // }
 
   @Get(['/shared-emails'])
   @ApiBearerAuth('Authorization')
@@ -138,9 +138,21 @@ export class AuthController {
     status: 200,
     description: 'Get all shared emails',
   })
-  async getShareUsers(@AuthMeta() _user): Promise<{ emails: string[] }> {
+  async getShareEmails(@AuthMeta() _user): Promise<{ emails: string[] }> {
+    return { emails: [] };
+  }
+
+  @Get(['/shared-users'])
+  @ApiBearerAuth('Authorization')
+  @ApiResponse({
+    status: 200,
+    description: 'Get all shared emails',
+  })
+  async getShareUsers(
+    @AuthMeta() _user,
+  ): Promise<{ users: { email: string; username?: string; name?: string }[] }> {
     const emails = await this.diaryShareService.getSharedUser(_user);
-    return { emails };
+    return { users: emails };
   }
 
   @Patch(['me/update'])
