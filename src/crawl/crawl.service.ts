@@ -1,31 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import axios from 'axios';
-import cheerio from 'cheerio';
+import Meta from 'html-metadata-parser';
+import get from 'lodash.get';
 
-const AxiosInstance = axios.create();
 
 @Injectable()
 export class CrawlerService {
   public async getPreviewLink(url: string): Promise<any> {
-    const data = await AxiosInstance.get(url).then(res => {
-      const html = res.data;
-      const $ = cheerio.load(html);
-      const title = $('[property="og:title"]')
-        ?.first()
-        ?.attr('content');
-      const image = $('[property="og:image"]')
-        ?.first()
-        ?.attr('content');
-      const description = $('[property="og:description"]')
-        ?.first()
-        ?.attr('content');
-      return {
-        title,
-        image,
-        description,
-        url: res.config.url,
-      };
-    });
-    return data;
+    const data = await Meta.parser(url);
+    const obj = {
+      title: get(data, 'meta.title') || get(data, 'og.title'),
+      image: get(data, 'og.image'),
+      description: get(data, 'meta.description') || get(data, 'og.description'),
+      url: get(data, 'og.url') || url,
+    }
+    return obj;
   }
 }
