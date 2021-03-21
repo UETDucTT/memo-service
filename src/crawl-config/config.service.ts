@@ -134,7 +134,7 @@ export class ConfigService {
     const articles = await Bluebird.map(
       listArticles,
       async ele => {
-        const result = {};
+        const result: any = {};
         const outsideItems = config.items;
         Object.entries(outsideItems).forEach(([k, v]: any) => {
           if (v.type === 'text') {
@@ -159,9 +159,12 @@ export class ConfigService {
               .html();
           }
         });
-        const detailUrl = result[config.keyUrlDetail];
+        let detailUrl = result[config.keyUrlDetail];
 
         if (detailUrl) {
+          if (!detailUrl.includes('http')) {
+            detailUrl = `${new URL(config.startUrl).origin}${detailUrl}`;
+          }
           const article = await fetch(detailUrl);
           const child = cheerio.load(await article.text());
           const detailItems = config.detail.items;
@@ -189,9 +192,14 @@ export class ConfigService {
             }
           });
         }
+        if (result.url) {
+          if (!result.url.includes('http')) {
+            result.url = `${new URL(config.startUrl).origin}${result.url}`;
+          }
+        }
         return result;
       },
-      { concurrency: 2 },
+      { concurrency: 5 },
     );
 
     return articles;
