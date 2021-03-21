@@ -15,6 +15,9 @@ import { PreviewLinkModule } from './link-preview/link-preview.module';
 import { TagModule } from './tag/tag.module';
 import { RedisModule } from './redis/redis.module';
 import { DiaryShareModule } from './diary-share/diary-share.module';
+import { CategoryModule } from './category/category.module';
+import { CrawlConfigModule } from './crawl-config/config.module';
+import { ArticleModule } from './article/article.module';
 
 @Module({
   imports: [
@@ -35,6 +38,9 @@ import { DiaryShareModule } from './diary-share/diary-share.module';
     PreviewLinkModule,
     TagModule,
     DiaryShareModule,
+    CategoryModule,
+    CrawlConfigModule,
+    ArticleModule,
     ScheduleModule.forRoot(),
     RedisModule.forRootAsync({
       imports: [ConfigModule],
