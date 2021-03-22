@@ -1,6 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
-import { Transform, Type as CTType } from 'class-transformer';
+import { Transform, Type as CTType, Expose } from 'class-transformer';
 import {
   IsDefined,
   IsString,
@@ -221,15 +221,17 @@ export enum ACTION {
 export class ShareDiaryDto {
   @ApiProperty()
   @IsEmail()
+  @Expose()
   email: string;
 
   @ApiProperty()
+  @Expose()
   @IsEnum(ACTION)
   action: ACTION;
 }
 
 export class ShareDiariesDto {
-  @ApiProperty({ required: false })
+  @ApiProperty({ required: false, type: [ShareDiaryDto] })
   @IsArray()
   @ValidateNested({ each: true })
   @ArrayMinSize(1)
