@@ -18,6 +18,49 @@ export class TaskService {
     private readonly notificationGateway: NotificationGateway,
     private config: ConfigService,
   ) {}
+  async sendEmailDirectly(diary: any, emails: string[]) {
+    return this.mailerService
+      .sendMail({
+        to: emails,
+        from: 'DUCTT-UET <trantienduc10@gmail.com>', // Senders email address
+        subject: `[IMemo] Thư mời xem bản ghi của ${diary.user.name}`,
+        context: {
+          name: diary.user.name,
+          link: `${this.config.get<string>('service.domainClient')}share?ref=${
+            diary.id
+          }`,
+        },
+        template: 'shareDiary',
+      })
+      .then(async success => {
+        console.log(success);
+      })
+      .catch(err => {
+        console.error(err);
+      });
+  }
+
+  async sendNotifications(diary: any, emails: string[]) {
+    const users = await this.userService.find({
+      email: { $in: emails },
+    });
+    if (users && users.length) {
+      const notifications = users.map(el => {
+        return {
+          user: el.id,
+          data: JSON.stringify({
+            type: 'INVITE_VIEW_DIARY',
+            diary,
+          }),
+        };
+      });
+      const results = await this.notificationService.bulkCreateNotification(
+        notifications,
+      );
+      this.notificationGateway.sendToUser(results);
+    }
+  }
+
   async sendEmailShareDiary(diary: any, emails: string[]) {
     const users = await this.userService.find({
       email: { $in: emails },

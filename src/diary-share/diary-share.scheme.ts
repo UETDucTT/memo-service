@@ -21,6 +21,9 @@ export class Share {
 
   @Prop({ required: true })
   time: Date;
+
+  @Prop({ required: false, type: String, default: 'view' })
+  action: string;
 }
 
 export type ShareDocument = Share & Document;

@@ -24,6 +24,7 @@ import {
   ParamDiaryDto,
   EditDiaryDto,
   TriggerShareDiaryDto,
+  ShareDiariesDto,
 } from './diary.dto';
 import { AuthMeta } from 'src/auth/auth.decorator';
 import {
@@ -126,6 +127,34 @@ export class DiaryController {
     };
   }
 
+  @Get(['/share-with-me/v1'])
+  @ApiBearerAuth('Authorization')
+  @ApiResponse({
+    status: 200,
+    description: 'get list diaries',
+    type: TransformResponse(DiariesResponse),
+  })
+  async getDiariesShareWithMeV1(
+    @AuthMeta() user,
+    @Query() dto: SearchDiaryDto,
+  ): Promise<any> {
+    const {
+      docs,
+      hasNextPage: hasMore,
+      totalDocs,
+    } = await this.diaryService.getDiaryShareWithMeV1({
+      ...dto,
+      user,
+    });
+    return {
+      diaries: docs,
+      pagination: {
+        totalItems: totalDocs,
+        hasMore,
+      },
+    };
+  }
+
   @Get(['/share-with-me/:id'])
   @ApiBearerAuth('Authorization')
   @ApiResponse({
@@ -137,9 +166,57 @@ export class DiaryController {
     @Param() params: ParamDiaryDto,
     @AuthMeta() user,
   ): Promise<any> {
-    const res = await this.diaryService.getShareById(params.id, user.id);
+    const { diary, action } = await this.diaryService.getShareById(
+      params.id,
+      user.id,
+    );
     return {
-      diary: res,
+      diary,
+      action,
+    };
+  }
+
+  @Patch(['/share-with-me/:id'])
+  @ApiBearerAuth('Authorization')
+  @ApiResponse({
+    status: 200,
+    description: 'update diariy share',
+    type: TransformResponse(OnlyId),
+  })
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async editShareDiary(
+    @Param() params: ParamDiaryDto,
+    @AuthMeta() user,
+    @Body() editDiaryDto: EditDiaryDto,
+  ): Promise<OnlyId> {
+    const id = await this.diaryService.updateSharedRecord(
+      params.id,
+      user.id,
+      editDiaryDto,
+    );
+    return {
+      id,
+    };
+  }
+
+  @Delete(['/share-with-me/:id'])
+  @ApiBearerAuth('Authorization')
+  @ApiResponse({
+    status: 200,
+    description: 'delete share diary',
+    type: TransformResponse(OnlyId),
+  })
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async deleteShareDiary(
+    @Param() params: ParamDiaryDto,
+    @AuthMeta() user,
+  ): Promise<OnlyId> {
+    const deletedDiary = await this.diaryService.deleteShareById(
+      params.id,
+      user.id,
+    );
+    return {
+      id: deletedDiary,
     };
   }
 
@@ -205,6 +282,24 @@ export class DiaryController {
     @AuthMeta() user,
   ): Promise<any> {
     await this.diaryService.shareDiary(triggleShareDiaryDto, user);
+    return {
+      success: true,
+    };
+  }
+
+  @Post(['/:id/shares'])
+  @ApiBearerAuth('Authorization')
+  @ApiResponse({
+    status: 200,
+    description: 'Share diary',
+    type: TransformResponse(TriggerShareDiaryDto),
+  })
+  async shareDiary(
+    @Param() params: ParamDiaryDto,
+    @Body() shares: ShareDiariesDto,
+    @AuthMeta() user,
+  ): Promise<any> {
+    await this.diaryService.shareDiaryNew(params.id, shares, user);
     return {
       success: true,
     };

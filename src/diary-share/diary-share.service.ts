@@ -17,6 +17,14 @@ export class DiaryShareService {
     return await this.shareModel.insertMany(items);
   }
 
+  async create(...args) {
+    return await this.shareModel.create(...args);
+  }
+
+  async findOneAndUpdate(...args) {
+    return await this.shareModel.findOneAndUpdate(...args);
+  }
+
   async getSharedUser(user: any) {
     const listReceiver = await this.shareModel
       .find(
@@ -67,6 +75,50 @@ export class DiaryShareService {
       .find({ receiver: receiverId })
       .exec();
     return listShares.map(el => el.record);
+  }
+
+  async getSharesByReceiverId(receiverId: string) {
+    const listShares = await this.shareModel
+      .find({ receiver: receiverId })
+      .exec();
+    return listShares;
+  }
+
+  async getSharePaginate(params: any) {
+    const { page, pageSize, q, user } = params;
+    // const listRecords = await this.getSharedRecordByReceiverId(user);
+    // let inCondition = {
+    //   _id: { $in: listRecords },
+    // };
+
+    const whereQuery = {
+      $and: [
+        // { ...inCondition },
+        // {
+        //   $or: [
+        //     {
+        //       title: { $regex: `.*${q || ''}.*`, $options: 'i' },
+        //     },
+        //     {
+        //       content: { $regex: `.*${q || ''}.*`, $options: 'i' },
+        //     },
+        //   ],
+        // },
+        { receiver: user.id },
+      ],
+    };
+    const result = await (this.shareModel as any).paginate(whereQuery, {
+      page,
+      limit: pageSize,
+      populate: [
+        {
+          path: 'record',
+          populate: [{ path: 'tags' }, { path: 'user', select: '-password' }],
+        },
+      ],
+      sort: '-updatedAt',
+    });
+    return result;
   }
 
   async find(condition: any) {

@@ -1,6 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
+import { Transform, Type as CTType } from 'class-transformer';
 import {
   IsDefined,
   IsString,
@@ -12,6 +12,9 @@ import {
   IsEmail,
   IsMongoId,
   IsBoolean,
+  ValidateNested,
+  ArrayMinSize,
+  IsNotEmpty,
 } from 'class-validator';
 import { Type } from 'src/resource/resource.entity';
 import { Status } from './diary.entity';
@@ -208,4 +211,28 @@ export class TriggerShareDiaryDto {
   @ApiProperty()
   @IsEmail({}, { each: true })
   emails: string[];
+}
+
+export enum ACTION {
+  VIEW = 'view',
+  EDIT = 'edit',
+}
+
+export class ShareDiaryDto {
+  @ApiProperty()
+  @IsEmail()
+  email: string;
+
+  @ApiProperty()
+  @IsEnum(ACTION)
+  action: ACTION;
+}
+
+export class ShareDiariesDto {
+  @ApiProperty({ required: false })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @ArrayMinSize(1)
+  @CTType(() => ShareDiaryDto)
+  emails: ShareDiaryDto[];
 }
