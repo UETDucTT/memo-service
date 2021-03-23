@@ -3,6 +3,7 @@ import { DiaryService } from 'src/diary/diary.service';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Share as DiaryShareMongo, ShareDocument } from './diary-share.scheme';
+import mongoose from 'mongoose';
 
 @Injectable()
 export class DiaryShareService {
@@ -86,36 +87,100 @@ export class DiaryShareService {
 
   async getSharePaginate(params: any) {
     const { page, pageSize, q, user } = params;
-    // const listRecords = await this.getSharedRecordByReceiverId(user);
-    // let inCondition = {
-    //   _id: { $in: listRecords },
-    // };
-
-    const whereQuery = {
-      $and: [
-        // { ...inCondition },
-        // {
-        //   $or: [
-        //     {
-        //       title: { $regex: `.*${q || ''}.*`, $options: 'i' },
-        //     },
-        //     {
-        //       content: { $regex: `.*${q || ''}.*`, $options: 'i' },
-        //     },
-        //   ],
-        // },
-        { receiver: user.id },
-      ],
-    };
-    const result = await (this.shareModel as any).paginate(whereQuery, {
+    const aggregate = this.shareModel.aggregate([
+      {
+        $lookup: {
+          from: 'records',
+          localField: 'record',
+          foreignField: '_id',
+          as: 'record',
+        },
+      },
+      {
+        $unwind: '$record',
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'sender',
+          foreignField: '_id',
+          as: 'sender',
+        },
+      },
+      {
+        $unwind: '$sender',
+      },
+      {
+        $lookup: {
+          from: 'tags',
+          localField: 'record.tags',
+          foreignField: '_id',
+          as: 'record.tags',
+        },
+      },
+      {
+        $match: {
+          receiver: mongoose.Types.ObjectId(user.id),
+          'record._id': { $ne: null },
+          $or: [
+            { 'record.title': { $regex: `.*${q || ''}.*`, $options: 'i' } },
+            { 'record.content': { $regex: `.*${q || ''}.*`, $options: 'i' } },
+          ],
+        },
+      },
+      {
+        $group: {
+          _id: '$record._id',
+          action: { $first: '$action' },
+          sender: { $first: '$sender' },
+          time: { $first: '$time' },
+          createdAt: { $first: '$createdAt' },
+          updatedAt: { $first: '$updatedAt' },
+          record: { $first: '$record' },
+        },
+      },
+      {
+        $project: {
+          'sender.password': 0,
+        },
+      },
+      {
+        $addFields: {
+          'sender.id': '$sender._id',
+          'record.id': '$record._id',
+          'record.links': {
+            $map: {
+              input: '$record.links',
+              as: 'link',
+              in: {
+                $mergeObjects: ['$$link', { id: '$$link._id' }],
+              },
+            },
+          },
+          'record.resources': {
+            $map: {
+              input: '$record.resources',
+              as: 'resource',
+              in: {
+                $mergeObjects: ['$$resource', { id: '$$resource._id' }],
+              },
+            },
+          },
+          'record.tags': {
+            $map: {
+              input: '$record.tags',
+              as: 'tag',
+              in: {
+                $mergeObjects: ['$$tag', { id: '$$tag._id' }],
+              },
+            },
+          },
+        },
+      },
+    ]);
+    const result = await (this.shareModel as any).aggregatePaginate(aggregate, {
       page,
       limit: pageSize,
-      populate: [
-        {
-          path: 'record',
-          populate: [{ path: 'tags' }, { path: 'user', select: '-password' }],
-        },
-      ],
       sort: '-updatedAt',
     });
     return result;

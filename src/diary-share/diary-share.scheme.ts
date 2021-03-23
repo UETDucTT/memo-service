@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import mongoose from 'mongoose';
+import mongooseAggregatePaginate from 'mongoose-aggregate-paginate-v2';
 
 @Schema({
   collection: 'shares',
@@ -29,3 +30,4 @@ export class Share {
 export type ShareDocument = Share & Document;
 
 export const ShareSchema = SchemaFactory.createForClass(Share);
+ShareSchema.plugin(mongooseAggregatePaginate);
