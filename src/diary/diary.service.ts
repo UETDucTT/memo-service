@@ -610,6 +610,7 @@ export class DiaryService {
             receiverEmail: el.email,
             time: new Date(),
             record: id,
+            action: action || 'view',
           });
         }
       }),
