@@ -128,6 +128,10 @@ export class ConfigService {
   }
 
   async runTestCrawl(config: any) {
+    const data1 = await fetch(
+      'https://baomoi.com/hai-phong-khai-truong-website-tuyen-truyen-bau-cu-va-phat-dong-giai-bao-chi/r/38339476.epi',
+    );
+    console.log(await data1.headers.raw());
     const data = await fetch(config.startUrl);
     const $ = cheerio.load(await data.text());
     const listArticles = $(config.listSelector).toArray();

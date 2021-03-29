@@ -22,11 +22,11 @@ export class TaskService {
     return this.mailerService
       .sendMail({
         to: emails,
-        from: 'DUCTT-UET <trantienduc10@gmail.com>', // Senders email address
-        subject: `[IMemo] Thư mời xem bản ghi của ${diary.user.name}`,
+        from: 'iMemo <admin@imemo.vn>', // Senders email address
+        subject: `[iMemo] Thư mời xem memo của ${diary.user.name}`,
         context: {
           name: diary.user.name,
-          link: `${this.config.get<string>('service.domainClient')}share?ref=${
+          link: `${this.config.get<string>('service.domainClient')}/share?ref=${
             diary.id
           }`,
         },
@@ -87,8 +87,8 @@ export class TaskService {
       this.mailerService
         .sendMail({
           to: emailSendByMailService,
-          from: 'DUCTT-UET <trantienduc10@gmail.com>', // Senders email address
-          subject: `[IMemo] Thư mời xem bản ghi của ${diary.user.name}`,
+          from: 'iMemo <admin@imemo.vn>', // Senders email address
+          subject: `[Memo] Thư mời xem memo của ${diary.user.name}`,
           context: {
             name: diary.user.name,
             link: `${this.config.get<string>(
