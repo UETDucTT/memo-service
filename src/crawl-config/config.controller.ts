@@ -10,6 +10,8 @@ import {
   Delete,
   UseInterceptors,
   Req,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthMeta } from 'src/auth/auth.decorator';
@@ -22,12 +24,17 @@ import {
   RunCrawlDto,
   TestCrawlDto,
 } from './config.dto';
+import { TaskService } from 'src/task/task.service';
 
 @Controller('configs')
 @ApiTags('Config Action')
 @UseInterceptors(new TransformInterceptor())
 export class ConfigController {
-  constructor(private configService: CrawlConfigService) {}
+  constructor(
+    private configService: CrawlConfigService,
+    @Inject(forwardRef(() => TaskService))
+    private taskService: TaskService,
+  ) {}
 
   @Get(['/get-all'])
   @ApiBearerAuth('Authorization')
@@ -123,9 +130,9 @@ export class ConfigController {
     @Body() testCrawlDto: TestCrawlDto,
     @Req() req: any,
   ): Promise<any> {
-    const articles = await this.configService.runTestCrawl(req.body.config);
+    this.taskService.cronTaskCrawlBaomoi();
     return {
-      articles,
+      success: 1,
     };
   }
 }
