@@ -27,7 +27,7 @@ export class ArticleController {
       totalDocs,
     } = await this.articleService.getList(dto);
     return {
-      diaries: docs,
+      articles: docs,
       pagination: {
         totalItems: totalDocs,
         hasMore,

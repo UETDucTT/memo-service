@@ -17,7 +17,7 @@ import parseDate from 'date-fns/parse';
 fetch.Promise = Bluebird;
 
 @Injectable()
-export class ConfigService {
+export class CrawlConfigService {
   constructor(
     @InjectModel(Config.name)
     private configModel: Model<ConfigDocument>,

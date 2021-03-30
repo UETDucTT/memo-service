@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthMeta } from 'src/auth/auth.decorator';
-import { ConfigService } from './config.service';
+import { CrawlConfigService } from './config.service';
 import { TransformInterceptor } from './transform.inteceptor';
 import {
   CreateConfigDto,
@@ -27,7 +27,7 @@ import {
 @ApiTags('Config Action')
 @UseInterceptors(new TransformInterceptor())
 export class ConfigController {
-  constructor(private configService: ConfigService) {}
+  constructor(private configService: CrawlConfigService) {}
 
   @Get(['/get-all'])
   @ApiBearerAuth('Authorization')

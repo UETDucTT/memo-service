@@ -11,6 +11,9 @@ export class Category {
 
   @Prop({ required: true })
   isActive: boolean;
+
+  @Prop({ required: false })
+  type?: string;
 }
 
 export type CategoryDocument = Category & Document;

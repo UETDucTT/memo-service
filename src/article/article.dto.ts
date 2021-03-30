@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsMongoId, IsOptional } from 'class-validator';
+import { IsArray, IsDateString, IsMongoId, IsOptional } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { BadRequestException } from '@nestjs/common';
 
@@ -8,13 +8,39 @@ export class ArticleDto {
   id: string;
 
   @ApiProperty()
+  title?: string;
+
+  @ApiProperty()
+  description?: string;
+
+  @ApiProperty()
+  image?: string;
+
+  @ApiProperty()
+  content?: string;
+
+  @ApiProperty()
+  url: string;
+
+  @ApiProperty()
+  web?: string;
+
+  @ApiProperty()
+  website?: string;
+
+  @ApiProperty()
+  publishDate?: string;
+}
+
+export class CreateArticleDto {
+  @ApiProperty()
   title: string;
 
   @ApiProperty()
   description: string;
 
   @ApiProperty()
-  content: string;
+  content?: string;
 
   @ApiProperty()
   url: string;
@@ -23,10 +49,16 @@ export class ArticleDto {
   web: string;
 
   @ApiProperty()
+  image: string;
+
+  @ApiProperty()
   website: string;
 
   @ApiProperty()
   publishDate: string;
+
+  @ApiProperty()
+  category: string;
 }
 
 export class SearchArticleDto {
@@ -63,5 +95,15 @@ export class SearchArticleDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsMongoId()
-  categoryId: string;
+  categoryId?: string;
+
+  @IsOptional()
+  @ApiProperty({
+    type: [String],
+    format: 'form',
+  })
+  @IsArray()
+  @Transform(({ value }) => value.split(','))
+  @IsMongoId({ each: true })
+  categoryIds?: string[];
 }

@@ -20,6 +20,9 @@ export class CategoryDto {
 
   @ApiProperty()
   isActive: boolean;
+
+  @ApiProperty()
+  type?: string;
 }
 
 export class ParamCategoryDto {
@@ -39,6 +42,11 @@ export class EditCategoryDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  type?: string;
 }
 
 export class CreateCategoryDtoSingle {
@@ -50,6 +58,11 @@ export class CreateCategoryDtoSingle {
   @ApiProperty()
   @IsBoolean()
   isActive: boolean;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  type?: string;
 }
 
 export class CreateCategoryDto {

@@ -7,10 +7,10 @@ import mongoose from 'mongoose';
   timestamps: true,
 })
 export class Article {
-  @Prop({ required: true })
+  @Prop({ required: false })
   title: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   description: string;
 
   @Prop({ required: false })
@@ -19,13 +19,16 @@ export class Article {
   @Prop({ required: true })
   url: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
+  image?: string;
+
+  @Prop({ required: false })
   web: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   website: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   publishDate: Date;
 
   @Prop({

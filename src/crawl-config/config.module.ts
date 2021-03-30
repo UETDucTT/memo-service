@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigController } from './config.controller';
-import { ConfigService } from './config.service';
+import { CrawlConfigService } from './config.service';
 import { IdentityMiddleware } from 'src/identity/identity.middleware';
 import { IdentityModule } from 'src/identity/identity.module';
 import { AuthModule } from 'src/auth/auth.module';
@@ -29,8 +29,8 @@ ConfigSchema.set('toJSON', {
     forwardRef(() => CategoryModule),
   ],
   controllers: [ConfigController],
-  providers: [ConfigService],
-  exports: [ConfigService],
+  providers: [CrawlConfigService],
+  exports: [CrawlConfigService],
 })
 export class CrawlConfigModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
