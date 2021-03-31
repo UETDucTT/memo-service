@@ -31,7 +31,7 @@ export class TagDto {
 }
 
 export class ParamTagDto {
-  @ApiProperty({ required: false, default: 'id' })
+  @ApiProperty()
   @IsMongoId()
   id: string;
 }

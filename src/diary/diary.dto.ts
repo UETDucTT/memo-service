@@ -144,6 +144,7 @@ export class SearchDiaryDto {
   @ApiProperty({
     type: [String],
     format: 'form',
+    required: false,
   })
   @IsArray()
   @Transform(({ value }) => value.split(','))
@@ -197,7 +198,7 @@ export class SearchDiaryDto {
 }
 
 export class ParamDiaryDto {
-  @ApiProperty({ required: false, default: 'id' })
+  @ApiProperty()
   @IsMongoId()
   id: string;
 }

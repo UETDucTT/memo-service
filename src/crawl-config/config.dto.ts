@@ -10,7 +10,7 @@ export class ConfigDto {
 }
 
 export class ParamConfigDto {
-  @ApiProperty({ required: false, default: 'id' })
+  @ApiProperty()
   @IsMongoId()
   id: string;
 }

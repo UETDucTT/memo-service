@@ -26,7 +26,7 @@ export class CategoryDto {
 }
 
 export class ParamCategoryDto {
-  @ApiProperty({ required: false, default: 'id' })
+  @ApiProperty()
   @IsMongoId()
   id: string;
 }

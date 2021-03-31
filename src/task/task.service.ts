@@ -135,7 +135,7 @@ export class TaskService {
           name: userInfo.username,
           link: `${this.config.get<string>(
             'service.domainClient',
-          )}confirm-register?token=${token}`,
+          )}/confirm-register?token=${token}`,
         },
         template: 'verifyAccount',
       })
@@ -155,7 +155,7 @@ export class TaskService {
         context: {
           link: `${this.config.get<string>(
             'service.domainClient',
-          )}forgot-password?token=${token}&name=${user.name || user.username}${
+          )}/forgot-password?token=${token}&name=${user.name || user.username}${
             user.picture ? `&picture=${user.picture}` : ''
           }`,
         },

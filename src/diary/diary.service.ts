@@ -182,16 +182,19 @@ export class DiaryService {
       diary.links = [];
     }
 
-    const tags = [];
-    if (Array.isArray(tagIds)) {
-      for (let i = 0; i < tagIds.length; i++) {
-        const currTag = await this.tagService.getTag({
-          $and: [{ _id: tagIds[i] }, { user: userId }],
-        });
-        if (!currTag) {
-          throw new NotFoundException(`Tag with id ${tagIds[i]} not found`);
+    if (!!tagIds) {
+      const tags = [];
+      if (Array.isArray(tagIds)) {
+        for (let i = 0; i < tagIds.length; i++) {
+          const currTag = await this.tagService.getTag({
+            $and: [{ _id: tagIds[i] }, { user: userId }],
+          });
+          if (!currTag) {
+            throw new NotFoundException(`Tag with id ${tagIds[i]} not found`);
+          }
+          tags.push(tagIds[i]);
         }
-        tags.push(tagIds[i]);
+        (rest as any).tags = tags;
       }
     }
 
@@ -199,7 +202,6 @@ export class DiaryService {
       { _id: id },
       {
         ...rest,
-        tags,
       } as any,
       {
         strict: false,
