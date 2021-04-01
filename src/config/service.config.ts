@@ -8,6 +8,11 @@ export interface ServiceConfig {
   mailUser: string;
   mailPass: string;
   limitLogin: boolean;
+  maxSizeUpload: number;
+  s3AccessKeyId: string;
+  s3SecretAccessKey: string;
+  s3Endpoint: string;
+  bucketName: string;
 }
 
 export default registerAs(
@@ -19,5 +24,10 @@ export default registerAs(
     mailUser: getEnvVarOrDie('MAIL_USER'),
     mailPass: getEnvVarOrDie('MAIL_PASS'),
     limitLogin: getEnvVarOrDie('LIMIT_LOGIN') === 'true',
+    s3AccessKeyId: getEnvVarOrDie('S3_ACCESS_KEY_ID'),
+    s3SecretAccessKey: getEnvVarOrDie('S3_SECRET_ACCESS_KEY'),
+    s3Endpoint: getEnvVarOrDie('S3_ENDPOINT'),
+    bucketName: getEnvVarOrDie('BUCKET_NAME'),
+    maxSizeUpload: Number(getEnvVarOrDie('MAX_SIZE_UPLOAD')),
   }),
 );

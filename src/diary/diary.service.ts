@@ -187,7 +187,7 @@ export class DiaryService {
       if (Array.isArray(tagIds)) {
         for (let i = 0; i < tagIds.length; i++) {
           const currTag = await this.tagService.getTag({
-            $and: [{ _id: tagIds[i] }, { user: userId }],
+            $and: [{ _id: tagIds[i] }],
           });
           if (!currTag) {
             throw new NotFoundException(`Tag with id ${tagIds[i]} not found`);
@@ -280,6 +280,21 @@ export class DiaryService {
 
     if (rest.links) {
       diary.links = [];
+    }
+    if (!!tagIds) {
+      const tags = [];
+      if (Array.isArray(tagIds)) {
+        for (let i = 0; i < tagIds.length; i++) {
+          const currTag = await this.tagService.getTag({
+            $and: [{ _id: tagIds[i] }],
+          });
+          if (!currTag) {
+            throw new NotFoundException(`Tag with id ${tagIds[i]} not found`);
+          }
+          tags.push(tagIds[i]);
+        }
+        (rest as any).tags = tags;
+      }
     }
 
     await this.diaryModel.findOneAndUpdate(

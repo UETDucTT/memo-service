@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import mongoose from 'mongoose';
+import mongooseAggregatePaginate from 'mongoose-aggregate-paginate-v2';
 
 @Schema({
   timestamps: false,
@@ -89,3 +90,4 @@ export class Diary {
 export type DiaryDocument = Diary & Document;
 
 export const DiarySchema = SchemaFactory.createForClass(Diary);
+DiarySchema.plugin(mongooseAggregatePaginate);

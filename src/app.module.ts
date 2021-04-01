@@ -18,6 +18,7 @@ import { DiaryShareModule } from './diary-share/diary-share.module';
 import { CategoryModule } from './category/category.module';
 import { CrawlConfigModule } from './crawl-config/config.module';
 import { ArticleModule } from './article/article.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { ArticleModule } from './article/article.module';
     CategoryModule,
     CrawlConfigModule,
     ArticleModule,
+    UploadModule,
     ScheduleModule.forRoot(),
     RedisModule.forRootAsync({
       imports: [ConfigModule],
