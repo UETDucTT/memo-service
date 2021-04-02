@@ -293,4 +293,55 @@ export class TaskService {
       }
     });
   }
+
+  @Timeout(1000)
+  async cronTaskCrawlEngadget() {
+    const categories = await this.categoryService.getAllCategories();
+    const configs = await this.configService.getAllConfigs();
+    const cnetCategories = categories
+      .filter(el => el.type === 'ENGADGET')
+      .map(el => el.id);
+    const engadgetCategoryConfigs = configs.filter(el =>
+      cnetCategories.includes((el.category as any).id),
+    );
+    for (let i = 0; i < engadgetCategoryConfigs.length; i++) {
+      await this.crawlOneConfigEngadget(engadgetCategoryConfigs[i]);
+    }
+  }
+
+  async crawlOneConfigEngadget(categoryConfig: any) {
+    const { config, category } = categoryConfig;
+    const startUrl = JSON.parse(config).startUrl;
+    const type = JSON.parse(config)?.type;
+    if (type !== 'RSS') return;
+    const data = await fetch(startUrl);
+    const list = await data.text();
+    const parser = new xml2js.Parser();
+    parser.parseString(list, async (err, result) => {
+      const items = result.rss.channel[0].item;
+      let articles = items.map((el: any) => {
+        try {
+          const url = el.link[0];
+          return {
+            title: el.title[0],
+            publishDate: new Date(el.pubDate[0]),
+            image: el['media:content'][0]['$'].url,
+            url,
+            website: new URL(url).origin,
+            web: 'Engadget',
+            description: el.description[0],
+          };
+        } catch {
+          return null;
+        }
+      });
+      articles = articles.filter(Boolean);
+      for (let i = 0; i < articles.length; i++) {
+        await this.articleService.createIfUrlNotExist({
+          ...articles[i],
+          category,
+        });
+      }
+    });
+  }
 }
