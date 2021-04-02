@@ -13,6 +13,7 @@ import cheerio from 'cheerio';
 import Bluebird from 'bluebird';
 import toDate from 'date-fns/toDate';
 import { ArticleService } from 'src/article/article.service';
+import xml2js from 'xml2js';
 
 fetch.Promise = Bluebird;
 
@@ -180,11 +181,11 @@ export class TaskService {
       baomoiCategories.includes((el.category as any).id),
     );
     for (let i = 0; i < baomoiCategoryConfigs.length; i++) {
-      await this.crawlOneConfig(baomoiCategoryConfigs[i]);
+      await this.crawlOneConfigBaoMoi(baomoiCategoryConfigs[i]);
     }
   }
 
-  async crawlOneConfig(categoryConfig: any) {
+  async crawlOneConfigBaoMoi(categoryConfig: any) {
     const { config, category } = categoryConfig;
     const startUrl = JSON.parse(config).startUrl;
     let allArticles = [];
@@ -240,5 +241,56 @@ export class TaskService {
         category,
       });
     }
+  }
+
+  @Cron(CronExpression.EVERY_HOUR)
+  async cronTaskCrawlCnet() {
+    const categories = await this.categoryService.getAllCategories();
+    const configs = await this.configService.getAllConfigs();
+    const cnetCategories = categories
+      .filter(el => el.type === 'CNET')
+      .map(el => el.id);
+    const cnetCategoryConfigs = configs.filter(el =>
+      cnetCategories.includes((el.category as any).id),
+    );
+    for (let i = 0; i < cnetCategoryConfigs.length; i++) {
+      await this.crawlOneConfigCnet(cnetCategoryConfigs[i]);
+    }
+  }
+
+  async crawlOneConfigCnet(categoryConfig: any) {
+    const { config, category } = categoryConfig;
+    const startUrl = JSON.parse(config).startUrl;
+    const type = JSON.parse(config)?.type;
+    if (type !== 'RSS') return;
+    const data = await fetch(startUrl);
+    const list = await data.text();
+    const parser = new xml2js.Parser();
+    parser.parseString(list, async (err, result) => {
+      const items = result.rss.channel[0].item;
+      let articles = items.map((el: any) => {
+        try {
+          const url = el.link[0];
+          return {
+            title: el.title[0],
+            publishDate: new Date(el.pubDate[0]),
+            image: el['media:thumbnail'][0]['$'].url,
+            url,
+            website: new URL(url).origin,
+            web: 'CNET',
+            description: el.description[0],
+          };
+        } catch {
+          return null;
+        }
+      });
+      articles = articles.filter(Boolean);
+      for (let i = 0; i < articles.length; i++) {
+        await this.articleService.createIfUrlNotExist({
+          ...articles[i],
+          category,
+        });
+      }
+    });
   }
 }
