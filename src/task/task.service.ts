@@ -243,7 +243,7 @@ export class TaskService {
     }
   }
 
-  @Cron(CronExpression.EVERY_HOUR)
+  @Timeout(1000)
   async cronTaskCrawlCnet() {
     const categories = await this.categoryService.getAllCategories();
     const configs = await this.configService.getAllConfigs();
