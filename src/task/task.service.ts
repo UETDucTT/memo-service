@@ -130,8 +130,8 @@ export class TaskService {
     this.mailerService
       .sendMail({
         to: userInfo.email,
-        from: 'DUCTT-UET <trantienduc10@gmail.com>', // Senders email address
-        subject: `[MEMO] Bạn cần xác thực email trước khi đăng nhập 😱`,
+        from: 'iMemo <admin@imemo.vn>', // Senders email address
+        subject: `[iMemo] Bạn cần xác thực email trước khi đăng nhập 😱`,
         context: {
           name: userInfo.username,
           link: `${this.config.get<string>(
@@ -151,8 +151,8 @@ export class TaskService {
     this.mailerService
       .sendMail({
         to: user.email,
-        from: 'DUCTT-UET <trantienduc10@gmail.com>', // Senders email address
-        subject: `[MEMO] Đặt lại mật khẩu của bạn`,
+        from: 'iMemo <trantienduc10@gmail.com>', // Senders email address
+        subject: `[iMemo] Đặt lại mật khẩu của bạn`,
         context: {
           link: `${this.config.get<string>(
             'service.domainClient',

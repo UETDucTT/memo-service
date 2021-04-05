@@ -24,7 +24,9 @@ export class TagService {
   }
 
   async getById(id: string, userId: string) {
-    const tag = await this.tagModel.findById(id);
+    const tag = await this.tagModel.findOne({
+      $and: [{ _id: id }, { user: userId }],
+    });
     if (!tag) {
       throw new NotFoundException(`Tag with id ${id} not found`);
     }
@@ -32,7 +34,9 @@ export class TagService {
   }
 
   async update(id: string, _userId: string, params: EditTagDto) {
-    const tag = await this.tagModel.findById(id);
+    const tag = await this.tagModel.findOne({
+      $and: [{ _id: id }, { user: _userId }],
+    });
     if (!tag) {
       throw new NotFoundException(`Tag with id ${id} not found`);
     }
@@ -41,7 +45,9 @@ export class TagService {
   }
 
   async deleteById(id: string, userId: string): Promise<string> {
-    const tag = await this.tagModel.findById(id);
+    const tag = await this.tagModel.findOne({
+      $and: [{ _id: id }, { user: userId }],
+    });
     if (!tag) {
       throw new NotFoundException(`Tag with id ${id} not found`);
     }

@@ -10,6 +10,7 @@ import {
   Inject,
   forwardRef,
   Res,
+  Put,
 } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
@@ -27,6 +28,7 @@ import {
   RegisterDto,
   RequestForgotPasswordDto,
   ResetPasswordDto,
+  UpdatePasswordDto,
 } from './auth.dto';
 import { OnlyId, UserOverviewResponse } from 'src/diary/diary.model';
 import { TransformInterceptor } from './transform.inteceptor';
@@ -120,18 +122,6 @@ export class AuthController {
     return user;
   }
 
-  // @Get(['/all-users'])
-  // @ApiBearerAuth('Authorization')
-  // @ApiResponse({
-  //   status: 200,
-  //   description: 'Get all user',
-  //   type: TransformResponse(UserOverviewResponse),
-  // })
-  // async getAllUsers(@AuthMeta() _user): Promise<any> {
-  //   const users = await this.authService.getAllUser();
-  //   return { users };
-  // }
-
   @Get(['/shared-emails'])
   @ApiBearerAuth('Authorization')
   @ApiResponse({
@@ -168,6 +158,27 @@ export class AuthController {
   ): Promise<OnlyId> {
     console.log(user.id);
     await this.authService.update(user.id, req);
+    return {
+      id: user.id,
+    };
+  }
+
+  @Put(['me/update-pasword'])
+  @ApiBearerAuth('Authorization')
+  @ApiResponse({
+    status: 200,
+    description: 'Update password',
+    type: TransformResponse(OnlyId),
+  })
+  async updatePassword(
+    @AuthMeta() user,
+    @Body() req: UpdatePasswordDto,
+  ): Promise<OnlyId> {
+    await this.authService.changePassword(
+      user.id,
+      req.password,
+      req.newPassword,
+    );
     return {
       id: user.id,
     };

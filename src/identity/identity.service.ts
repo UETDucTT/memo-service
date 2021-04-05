@@ -22,13 +22,17 @@ export class IdentityService {
     };
   }
 
-  generateTokenConfirmRegister(email: string, expiredSecond: number) {
+  generateTokenConfirmRegister(
+    email: string,
+    expiredSecond: number,
+    suffixKey: string,
+  ) {
     return {
       token: jwt.sign(
         {
           cid: email,
         },
-        this.config.get<string>('identity.jwtSecretKey'),
+        this.config.get<string>('identity.jwtSecretKey') + suffixKey,
         { expiresIn: `${expiredSecond}s` },
       ),
     };

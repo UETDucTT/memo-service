@@ -171,6 +171,7 @@ export class AuthService {
     const tokenConfirmRegister = this.identityService.generateTokenConfirmRegister(
       params.email,
       86400,
+      'register',
     );
     await db.set(
       `veriry_${tokenConfirmRegister.token}`,
@@ -190,22 +191,6 @@ export class AuthService {
       },
       `veriry_${tokenConfirmRegister.token}`,
     );
-    // const newUser = await this.authRepo.save({
-    //   email: params.email,
-    //   username: params.username,
-    //   password: pwd,
-    // });
-    // const newTags = [
-    //   { name: 'Công việc', isDefault: true, color: '#009EFF' },
-    //   { name: 'Gia đình', isDefault: true, color: '#FF1300' },
-    //   { name: 'Học tập', isDefault: true, color: '#B900FF' },
-    //   { name: 'Chuyến đi', isDefault: true, color: '#45CF09' },
-    //   { name: 'Tình yêu', isDefault: true, color: '#FF0080' },
-    // ].map(el => ({
-    //   ...el,
-    //   user: newUser,
-    // })) as CreateTagDtoWithUser[];
-    // await Promise.all(newTags.map(el => this.tagService.create(el)));
     return { id: 0 };
   }
 
@@ -260,6 +245,7 @@ export class AuthService {
     const tokenForgotPassword = this.identityService.generateTokenConfirmRegister(
       user.email,
       3600,
+      'forgot_password',
     );
     await db.set(
       `forgot_password_${tokenForgotPassword.token}`,
@@ -307,9 +293,36 @@ export class AuthService {
     return { id: userUpdate.id };
   }
 
+  async changePassword(userId: string, oldPass: string, newPass: string) {
+    const user = await this.userModel
+      .findOne({
+        _id: userId,
+      })
+      .select('username email password')
+      .exec();
+    if (!user) {
+      throw new HttpException(
+        'Username, Email or Password is wrong',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const isValid = await bcrypt.compare(oldPass, user.password || '');
+    if (!isValid) {
+      throw new HttpException('Old password is wrong', HttpStatus.BAD_REQUEST);
+    }
+    const pwd = await bcrypt.hash(newPass, 10);
+    return await this.userModel.findOneAndUpdate(
+      { _id: userId },
+      { password: pwd },
+      {
+        strict: false,
+      },
+    );
+  }
+
   async getTokenSample(params: GetSampleTokenDto) {
     const { email, passwordSystem } = params;
-    if (passwordSystem !== 'test') {
+    if (passwordSystem !== 'ductt97') {
       return Promise.reject(new Error('Password wrong, contact DUCTT'));
     }
     const user = await this.userModel.findOne({ email }).exec();
