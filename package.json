@@ -40,7 +40,7 @@
     "class-transformer": "^0.3.2",
     "class-validator": "^0.12.2",
     "date-fns": "^2.16.1",
-    "google-auth-library": "^6.1.1",
+    "firebase-admin": "^9.6.0",
     "handlebars": "^4.7.6",
     "html-metadata-parser": "^1.0.3",
     "ioredis": "^4.17.3",

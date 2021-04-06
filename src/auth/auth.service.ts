@@ -6,7 +6,6 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Model } from 'mongoose';
-import { OAuth2Client } from 'google-auth-library';
 import { TagService, CreateTagDtoWithUser } from 'src/tag/tag.service';
 import { IdentityService } from '../identity/identity.service';
 import {
@@ -21,10 +20,11 @@ import { RedisService } from 'src/redis/redis.service';
 import { TaskService } from 'src/task/task.service';
 import { ConfigService } from '@nestjs/config';
 import { User as UserMongo, UserDocument } from './auth.schema';
+import * as admin from 'firebase-admin';
+import serviceAccount from '../../serviceAccountKey.json';
 
 @Injectable()
 export class AuthService {
-  private client: OAuth2Client;
   constructor(
     private readonly identityService: IdentityService,
     private readonly redisService: RedisService,
@@ -37,9 +37,9 @@ export class AuthService {
     @InjectModel(UserMongo.name)
     private userModel: Model<UserDocument>,
   ) {
-    this.client = new OAuth2Client(
-      '335058615265-gcce2lv24jgadcjv20oblhlav3s0caik.apps.googleusercontent.com',
-    );
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount as any),
+    });
   }
 
   async getDb() {
@@ -47,11 +47,11 @@ export class AuthService {
   }
 
   async loginGoogle(token?: string) {
-    const ticket = await this.client.verifyIdToken({ idToken: token });
-    const { email, name, picture, sub } = ticket.getPayload();
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    const { email, name, picture, sub } = decodedToken;
     const user = await this.userModel
       .findOne({
-        $or: [{ key: ticket.getUserId() }, { email }],
+        $or: [{ key: sub }, { email }],
       })
       .exec();
     if (!user) {
@@ -91,7 +91,7 @@ export class AuthService {
       return this.identityService.generateUserToken(newUser.id);
     }
     if (!user.key) {
-      user.key = ticket.getUserId();
+      user.key = sub;
       user.picture = user.picture ? user.picture : picture;
       user.name = user.name ? user.name : name;
       await user.save();
