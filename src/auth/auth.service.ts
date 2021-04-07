@@ -48,7 +48,18 @@ export class AuthService {
 
   async loginGoogle(token?: string) {
     const decodedToken = await admin.auth().verifyIdToken(token);
-    const { email, name, picture, sub } = decodedToken;
+    // eslint-disable-next-line prefer-const
+    let { email, name, picture, sub } = decodedToken;
+    if (!decodedToken.email) {
+      const exclusiveUser = await admin.auth().getUser(decodedToken.uid);
+      email = exclusiveUser.providerData?.[0]?.email;
+    }
+    if (!email) {
+      throw new HttpException(
+        'Email không được cung cấp',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     const user = await this.userModel
       .findOne({
         $or: [{ key: sub }, { email }],
