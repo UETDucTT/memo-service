@@ -57,7 +57,7 @@ export class TaskService {
       });
   }
 
-  async sendNotifications(diary: any, emails: string[]) {
+  async sendNotifications(type: string, params: any, emails: string[]) {
     const users = await this.userService.find({
       email: { $in: emails },
     });
@@ -65,10 +65,9 @@ export class TaskService {
       const notifications = users.map(el => {
         return {
           user: el.id,
-          data: JSON.stringify({
-            type: 'INVITE_VIEW_DIARY',
-            diary,
-          }),
+          type,
+          params,
+          seen: false,
         };
       });
       const results = await this.notificationService.bulkCreateNotification(
@@ -78,50 +77,51 @@ export class TaskService {
     }
   }
 
-  async sendEmailShareDiary(diary: any, emails: string[]) {
-    const users = await this.userService.find({
-      email: { $in: emails },
-    });
-    if (users && users.length) {
-      const notifications = users.map(el => {
-        return {
-          user: el.id,
-          data: JSON.stringify({
-            type: 'INVITE_VIEW_DIARY',
-            diary,
-          }),
-        };
-      });
-      const results = await this.notificationService.bulkCreateNotification(
-        notifications,
-      );
-      this.notificationGateway.sendToUser(results);
-    }
-    const emailSendByMailService = emails.filter(
-      el => !users.map(item => item.email).includes(el),
-    );
-    if (emailSendByMailService.length) {
-      this.mailerService
-        .sendMail({
-          to: emailSendByMailService,
-          from: 'iMemo <admin@imemo.vn>', // Senders email address
-          subject: `[Memo] Thư mời xem memo của ${diary.user.name}`,
-          context: {
-            name: diary.user.name,
-            link: `${this.config.get<string>(
-              'service.domainClient',
-            )}share?ref=${diary.id}`,
-          },
-          template: 'shareDiary',
-        })
-        .then(async success => {
-          console.log(success);
-        })
-        .catch(err => {
-          console.error(err);
-        });
-    }
-  }
+  // async sendEmailShareDiary(diary: any, emails: string[]) {
+  //   const users = await this.userService.find({
+  //     email: { $in: emails },
+  //   });
+  //   if (users && users.length) {
+  //     const notifications = users.map(el => {
+  //       return {
+  //         user: el.id,
+  //         data: JSON.stringify({
+  //           type: 'INVITE_VIEW_DIARY',
+  //           diary,
+  //         }),
+  //         seen: false,
+  //       };
+  //     });
+  //     const results = await this.notificationService.bulkCreateNotification(
+  //       notifications,
+  //     );
+  //     this.notificationGateway.sendToUser(results);
+  //   }
+  //   const emailSendByMailService = emails.filter(
+  //     el => !users.map(item => item.email).includes(el),
+  //   );
+  //   if (emailSendByMailService.length) {
+  //     this.mailerService
+  //       .sendMail({
+  //         to: emailSendByMailService,
+  //         from: 'iMemo <admin@imemo.vn>', // Senders email address
+  //         subject: `[Memo] Thư mời xem memo của ${diary.user.name}`,
+  //         context: {
+  //           name: diary.user.name,
+  //           link: `${this.config.get<string>(
+  //             'service.domainClient',
+  //           )}share?ref=${diary.id}`,
+  //         },
+  //         template: 'shareDiary',
+  //       })
+  //       .then(async success => {
+  //         console.log(success);
+  //       })
+  //       .catch(err => {
+  //         console.error(err);
+  //       });
+  //   }
+  // }
 
   async sendEmailVerifyAccount(
     userInfo: { username: string; email: string },

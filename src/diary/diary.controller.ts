@@ -270,22 +270,22 @@ export class DiaryController {
     };
   }
 
-  @Post(['/trigger-send-email'])
-  @ApiBearerAuth('Authorization')
-  @ApiResponse({
-    status: 200,
-    description: 'send email',
-    type: TransformResponse(TriggerShareDiaryDto),
-  })
-  async triggerSendEmail(
-    @Body() triggleShareDiaryDto: TriggerShareDiaryDto,
-    @AuthMeta() user,
-  ): Promise<any> {
-    await this.diaryService.shareDiary(triggleShareDiaryDto, user);
-    return {
-      success: true,
-    };
-  }
+  // @Post(['/trigger-send-email'])
+  // @ApiBearerAuth('Authorization')
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'send email',
+  //   type: TransformResponse(TriggerShareDiaryDto),
+  // })
+  // async triggerSendEmail(
+  //   @Body() triggleShareDiaryDto: TriggerShareDiaryDto,
+  //   @AuthMeta() user,
+  // ): Promise<any> {
+  //   await this.diaryService.shareDiary(triggleShareDiaryDto, user);
+  //   return {
+  //     success: true,
+  //   };
+  // }
 
   @Post(['/:id/shares'])
   @ApiBearerAuth('Authorization')

@@ -11,9 +11,9 @@ import { IdentityModule } from 'src/identity/identity.module';
 import { IdentityMiddleware } from 'src/identity/identity.middleware';
 import { TagModule } from 'src/tag/tag.module';
 import { TaskModule } from 'src/task/task.module';
-import { DiaryShareModule } from 'src/diary-share/diary-share.module';
 import { ConfigModule } from '@nestjs/config';
 import { User as UserMongo, UserSchema } from './auth.schema';
+import { DiaryModule } from 'src/diary/diary.module';
 
 UserSchema.virtual('id').get(function() {
   return this._id.toHexString();
@@ -29,7 +29,7 @@ UserSchema.set('toJSON', {
     IdentityModule,
     forwardRef(() => TagModule),
     forwardRef(() => TaskModule),
-    forwardRef(() => DiaryShareModule),
+    forwardRef(() => DiaryModule),
     forwardRef(() => ConfigModule),
   ],
   controllers: [AuthController],

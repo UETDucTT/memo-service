@@ -8,7 +8,8 @@ import {
 } from './notification.schema';
 
 interface NotificationCreateWithUser {
-  data: any;
+  params: any;
+  type: string;
   seen: boolean;
   user: string;
 }
