@@ -32,8 +32,8 @@ import {
 } from './auth.dto';
 import { OnlyId, UserOverviewResponse } from 'src/diary/diary.model';
 import { TransformInterceptor } from './transform.inteceptor';
-import { DiaryShareService } from 'src/diary-share/diary-share.service';
 import { User as UserMongo } from './auth.schema';
+import { DiaryService } from 'src/diary/diary.service';
 
 @Controller('auth')
 @ApiTags('Auth management')
@@ -41,8 +41,8 @@ import { User as UserMongo } from './auth.schema';
 export class AuthController {
   constructor(
     private authService: AuthService,
-    @Inject(forwardRef(() => DiaryShareService))
-    private diaryShareService: DiaryShareService,
+    @Inject(forwardRef(() => DiaryService))
+    private diaryService: DiaryService,
   ) {}
 
   @Post(['get-token'])
@@ -138,10 +138,8 @@ export class AuthController {
     status: 200,
     description: 'Get all shared emails',
   })
-  async getShareUsers(
-    @AuthMeta() _user,
-  ): Promise<{ users: { email: string; username?: string; name?: string }[] }> {
-    const emails = await this.diaryShareService.getSharedUser(_user);
+  async getShareUsers(@AuthMeta() _user): Promise<any> {
+    const emails = await this.diaryService.getSharedUsers(_user);
     return { users: emails };
   }
 

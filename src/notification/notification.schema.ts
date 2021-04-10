@@ -8,7 +8,10 @@ import mongoose from 'mongoose';
 })
 export class Notification {
   @Prop({ type: Object, required: true })
-  data: any;
+  params: any;
+
+  @Prop({ required: true })
+  type: string;
 
   @Prop({ required: false, default: false })
   seen: boolean;

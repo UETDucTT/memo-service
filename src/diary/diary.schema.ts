@@ -55,6 +55,42 @@ LinkSchema.set('toJSON', {
 });
 
 @Schema({
+  timestamps: false,
+})
+export class Share {
+  @Prop({ required: true })
+  email: string;
+
+  @Prop()
+  receiver?: string;
+
+  @Prop()
+  picture?: string;
+
+  @Prop()
+  username?: string;
+
+  @Prop()
+  name?: string;
+
+  @Prop({ required: true })
+  time: Date;
+
+  @Prop({ required: false, type: String, default: 'view' })
+  action: string;
+}
+
+const ShareSchema = SchemaFactory.createForClass(Share);
+
+ShareSchema.virtual('id').get(function() {
+  return this._id.toHexString();
+});
+
+ShareSchema.set('toJSON', {
+  virtuals: true,
+});
+
+@Schema({
   collection: 'records',
   timestamps: true,
 })
@@ -85,6 +121,9 @@ export class Diary {
 
   @Prop({ type: [{ type: LinkSchema }] })
   links: Link[];
+
+  @Prop({ type: [{ type: ShareSchema }] })
+  shares: Share[];
 }
 
 export type DiaryDocument = Diary & Document;
