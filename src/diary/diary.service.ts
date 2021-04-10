@@ -666,6 +666,10 @@ export class DiaryService {
   // }
 
   async shareDiaryNew(id: string, shares: ShareDiariesDto, user: any) {
+    shares.emails = shares.emails.map(el => ({
+      action: el.action,
+      email: el.email.toLowerCase(),
+    }));
     const recordTemp = await this.diaryModel
       .findOne({ $and: [{ _id: id }, { user: user.id }] })
       .populate('user')
