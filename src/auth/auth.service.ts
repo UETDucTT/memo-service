@@ -351,7 +351,7 @@ export class AuthService {
     return await this.userModel.findById(id).select('-password');
   }
 
-  async find(condition: any): Promise<any> {
+  async find(condition: any) {
     return await this.userModel.find(condition);
   }
 

@@ -19,7 +19,7 @@ import { TaskService } from 'src/task/task.service';
 import { DiaryShareService } from 'src/diary-share/diary-share.service';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { Diary as DiaryMongo, DiaryDocument } from './diary.schema';
+import { Diary as DiaryMongo, DiaryDocument, Share } from './diary.schema';
 import { AuthService } from 'src/auth/auth.service';
 import mongoose from 'mongoose';
 
@@ -237,49 +237,44 @@ export class DiaryService {
   }
 
   async getShareById(id: string, receiverId: string) {
-    const shares = await this.diaryShareService.find({
-      record: id,
-      receiver: receiverId,
-    });
-    if (!shares.length) {
-      throw new NotFoundException(`Diary with id ${id} non-public`);
-    }
-    const diary = await this.diaryModel
-      .findOne({ $and: [{ _id: id }] })
+    const record = await this.diaryModel
+      .findOne({ _id: id })
       .populate('tags')
       .populate('user', '-password')
       .exec();
-    if (!diary) {
+    if (!record) {
       throw new NotFoundException(`Diary with id ${id} not found`);
     }
-    const action = shares[0].action;
-    return { diary, action };
+    const share = record.shares.find(el => el.receiver === receiverId);
+    if (!share) {
+      throw new NotFoundException(`Diary with id ${id} non-public with you`);
+    }
+    const action = share.action;
+    return { diary: record, action };
   }
 
   async updateSharedRecord(id: string, userId: string, params: EditDiaryDto) {
-    const shares = await this.diaryShareService.find({
-      record: id,
-      receiver: userId,
-      action: 'edit',
-    });
-    if (!shares.length) {
-      throw new BadRequestException(`Disallow update record with id: ${id}`);
-    }
-    const diary = await this.diaryModel
-      .findOne({ $and: [{ _id: id }] })
+    const record = await this.diaryModel
+      .findOne({ _id: id })
       .populate('tags')
       .populate('user', '-password')
       .exec();
-    if (!diary) {
+    if (!record) {
       throw new NotFoundException(`Diary with id ${id} not found`);
+    }
+    const share = record.shares.find(
+      el => el.receiver === userId && el.action === 'edit',
+    );
+    if (!share) {
+      throw new BadRequestException(`Disallow update record with id: ${id}`);
     }
     const { tagIds, ...rest } = params;
     if (rest.resources) {
-      diary.resources = [];
+      record.resources = [];
     }
 
     if (rest.links) {
-      diary.links = [];
+      record.links = [];
     }
     if (!!tagIds) {
       const tags = [];
@@ -306,25 +301,25 @@ export class DiaryService {
         strict: false,
       },
     );
-    return diary.id;
+    return record.id;
   }
 
   async deleteShareById(id: string, userId: string): Promise<string> {
-    const shares = await this.diaryShareService.find({
-      record: id,
-      receiver: userId,
-      action: 'edit',
-    });
-    if (!shares.length) {
-      throw new BadRequestException(`Disallow delete record with id: ${id}`);
-    }
-    const diary = await this.diaryModel.findOne({
-      $and: [{ _id: id }],
-    });
-    if (!diary) {
+    const record = await this.diaryModel
+      .findOne({ _id: id })
+      .populate('tags')
+      .populate('user', '-password')
+      .exec();
+    if (!record) {
       throw new NotFoundException(`Diary with id ${id} not found`);
     }
-    await diary.remove();
+    const share = record.shares.find(
+      el => el.receiver === userId && el.action === 'edit',
+    );
+    if (!share) {
+      throw new BadRequestException(`Disallow update record with id: ${id}`);
+    }
+    await record.remove();
     return id;
   }
 
@@ -459,7 +454,128 @@ export class DiaryService {
   }
 
   async getDiaryShareWithMeV1(params: SearchDiaryDtoWithUser) {
-    return this.diaryShareService.getSharePaginate(this.buildParams(params));
+    const { page, pageSize, q, user } = this.buildParams(params);
+    const aggregate = this.diaryModel.aggregate([
+      {
+        $match: {
+          shares: {
+            $elemMatch: {
+              receiver: (user as any).id,
+            },
+          },
+          $or: [
+            { title: { $regex: `.*${q || ''}.*`, $options: 'i' } },
+            { content: { $regex: `.*${q || ''}.*`, $options: 'i' } },
+          ],
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      {
+        $unwind: '$user',
+      },
+      {
+        $lookup: {
+          from: 'tags',
+          localField: 'tags',
+          foreignField: '_id',
+          as: 'tags',
+        },
+      },
+      {
+        $project: {
+          'user.password': 0,
+        },
+      },
+      {
+        $set: {
+          listShares: {
+            $filter: {
+              input: '$shares',
+              as: 'item',
+              cond: { $eq: ['$$item.receiver', (user as any).id] },
+            },
+          },
+        },
+      },
+      {
+        $set: {
+          shareOption: { $arrayElemAt: ['$listShares', 0] },
+        },
+      },
+      {
+        $addFields: {
+          id: '$_id',
+          links: {
+            $map: {
+              input: '$links',
+              as: 'link',
+              in: {
+                $mergeObjects: ['$$link', { id: '$$link._id' }],
+              },
+            },
+          },
+          resources: {
+            $map: {
+              input: '$resources',
+              as: 'resource',
+              in: {
+                $mergeObjects: ['$$resource', { id: '$$resource._id' }],
+              },
+            },
+          },
+          tags: {
+            $map: {
+              input: '$tags',
+              as: 'tag',
+              in: {
+                $mergeObjects: ['$$tag', { id: '$$tag._id' }],
+              },
+            },
+          },
+        },
+      },
+      {
+        $set: {
+          record: '$$ROOT',
+          sender: '$user',
+          action: '$shareOption.action',
+          time: '$shareOption.time',
+        },
+      },
+      {
+        $unset: [
+          '_id',
+          'pinned',
+          'status',
+          'tags',
+          'title',
+          'content',
+          'user',
+          'links',
+          'resources',
+          'createdAt',
+          'updatedAt',
+          'shares',
+          'id',
+          'listShares',
+          'shareOption',
+        ],
+      },
+    ]);
+    const result = await (this.diaryModel as any).aggregatePaginate(aggregate, {
+      page,
+      limit: pageSize,
+      sort: '-time',
+    });
+    return result;
+    // return this.diaryShareService.getSharePaginate(this.buildParams(params));
   }
 
   async getDiaryShareWithMe(params: SearchDiaryDtoWithUser) {
@@ -495,106 +611,77 @@ export class DiaryService {
     return result;
   }
 
-  async shareDiary(triggleSendEmailDto: TriggerShareDiaryDto, user: any) {
-    const diary = await this.diaryModel
-      .findOne({
-        $and: [{ _id: triggleSendEmailDto.id }, { user: user.id }],
-      })
-      .populate('user');
-    if (!diary) {
-      throw new BadRequestException(
-        `Diary with id ${triggleSendEmailDto.id} not found`,
-      );
-    }
-    const shares: any[] = [];
-    const users = await this.userService.find({
-      email: { $in: triggleSendEmailDto.emails },
-    });
-    const remainEmails = triggleSendEmailDto.emails.filter(
-      el => !users.map(u => u.email).includes(el),
-    );
-    if (!!remainEmails.length && diary.status === Status.private) {
-      await this.diaryModel.findOneAndUpdate(
-        { _id: diary.id },
-        {
-          status: Status.public,
-        } as any,
-        {
-          strict: false,
-        },
-      );
-    }
-    users.forEach(el => {
-      shares.push({
-        sender: user.id,
-        receiver: el.id,
-        receiverEmail: el.email,
-        time: new Date(),
-        record: triggleSendEmailDto.id,
-      });
-    });
-    remainEmails.forEach(el => {
-      shares.push({
-        sender: user.id,
-        receiver: null,
-        receiverEmail: el,
-        time: new Date(),
-        record: triggleSendEmailDto.id,
-      });
-    });
-    await this.diaryShareService.bulkCreate(shares);
-    this.taskService.sendEmailShareDiary(
-      diary as any,
-      triggleSendEmailDto.emails.filter(el => el !== user.email),
-    );
-  }
+  // async shareDiary(triggleSendEmailDto: TriggerShareDiaryDto, user: any) {
+  //   const diary = await this.diaryModel
+  //     .findOne({
+  //       $and: [{ _id: triggleSendEmailDto.id }, { user: user.id }],
+  //     })
+  //     .populate('user');
+  //   if (!diary) {
+  //     throw new BadRequestException(
+  //       `Diary with id ${triggleSendEmailDto.id} not found`,
+  //     );
+  //   }
+  //   const shares: any[] = [];
+  //   const users = await this.userService.find({
+  //     email: { $in: triggleSendEmailDto.emails },
+  //   });
+  //   const remainEmails = triggleSendEmailDto.emails.filter(
+  //     el => !users.map(u => u.email).includes(el),
+  //   );
+  //   if (!!remainEmails.length && diary.status === Status.private) {
+  //     await this.diaryModel.findOneAndUpdate(
+  //       { _id: diary.id },
+  //       {
+  //         status: Status.public,
+  //       } as any,
+  //       {
+  //         strict: false,
+  //       },
+  //     );
+  //   }
+  //   users.forEach(el => {
+  //     shares.push({
+  //       sender: user.id,
+  //       receiver: el.id,
+  //       receiverEmail: el.email,
+  //       time: new Date(),
+  //       record: triggleSendEmailDto.id,
+  //     });
+  //   });
+  //   remainEmails.forEach(el => {
+  //     shares.push({
+  //       sender: user.id,
+  //       receiver: null,
+  //       receiverEmail: el,
+  //       time: new Date(),
+  //       record: triggleSendEmailDto.id,
+  //     });
+  //   });
+  //   await this.diaryShareService.bulkCreate(shares);
+  //   this.taskService.sendEmailShareDiary(
+  //     diary as any,
+  //     triggleSendEmailDto.emails.filter(el => el !== user.email),
+  //   );
+  // }
 
   async shareDiaryNew(id: string, shares: ShareDiariesDto, user: any) {
-    const records = await this.diaryModel.aggregate([
-      {
-        $match: {
-          _id: mongoose.Types.ObjectId(id),
-          user: mongoose.Types.ObjectId(user.id),
-        },
-      },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'user',
-          foreignField: '_id',
-          as: 'user',
-        },
-      },
-      {
-        $unwind: '$user',
-      },
-      {
-        $lookup: {
-          from: 'shares',
-          localField: '_id',
-          foreignField: 'record',
-          as: 'shares',
-        },
-      },
-      {
-        $project: {
-          'user.password': 0,
-        },
-      },
-    ]);
-    if (!records?.length) {
+    const recordTemp = await this.diaryModel
+      .findOne({ $and: [{ _id: id }, { user: user.id }] })
+      .populate('user')
+      .exec();
+    if (!recordTemp) {
       throw new BadRequestException(`Diary with id ${id} not found`);
     }
-    const diary = records[0];
     const users = await this.userService.find({
       email: { $in: shares.emails.map(el => el.email) },
     });
     const remainEmails = shares.emails.filter(
       el => !users.map(u => u.email).includes(el.email),
     );
-    if (!!remainEmails.length && diary.status === Status.private) {
+    if (!!remainEmails.length && recordTemp.status === Status.private) {
       await this.diaryModel.findOneAndUpdate(
-        { _id: diary.id },
+        { _id: recordTemp.id },
         {
           status: Status.public,
         } as any,
@@ -603,72 +690,60 @@ export class DiaryService {
         },
       );
     }
+
+    const currentShares = recordTemp.shares;
     const emailsSendNoti = [];
-    await Promise.all(
-      users.map(el => {
-        const shareItem = diary.shares.find(s => s.receiverEmail === el.email);
-        const action = shares.emails.find(em => em.email === el.email)?.action;
-        emailsSendNoti.push(el.email);
-        if (shareItem) {
-          return this.diaryShareService.findOneAndUpdate(
-            { _id: shareItem._id },
-            {
-              sender: user.id,
-              receiver: el.id,
-              receiverEmail: el.email,
-              record: id,
-              action: action || 'view',
-            },
-          );
-        } else {
-          return this.diaryShareService.create({
-            sender: user.id,
-            receiver: el.id,
-            receiverEmail: el.email,
-            time: new Date(),
-            record: id,
-            action: action || 'view',
-          });
-        }
-      }),
+    const sharesNotUpdate = currentShares.filter(
+      el => !shares.emails.map(s => s.email).includes(el.email),
     );
+    const sharesNeedUpdate: Share[] = [];
+    users.forEach(el => {
+      const action = shares.emails.find(em => em.email === el.email)?.action;
+      emailsSendNoti.push(el.email);
+      sharesNeedUpdate.push({
+        action: action || 'view',
+        receiver: el.id,
+        email: el.email,
+        picture: el.picture,
+        time: new Date(),
+        name: el.name,
+        username: el.username,
+      });
+    });
     const emailsSendDirectly = [];
-    await Promise.all(
-      remainEmails.map(el => {
-        emailsSendDirectly.push(el.email);
-        const shareItem = diary.shares.find(s => s.receiverEmail === el.email);
-        if (shareItem) {
-          return this.diaryShareService.findOneAndUpdate(
-            { _id: shareItem._id },
-            {
-              sender: user.id,
-              receiver: null,
-              receiverEmail: el.email,
-              record: id,
-              action: el.action || 'view',
-            },
-          );
-        } else {
-          return this.diaryShareService.create({
-            sender: user.id,
-            receiver: null,
-            receiverEmail: el.email,
-            time: new Date(),
-            record: id,
-            action: el.action || 'view',
-          }) as any;
-        }
-      }),
+    remainEmails.forEach(el => {
+      emailsSendDirectly.push(el.email);
+      sharesNeedUpdate.push({
+        action: 'view',
+        email: el.email,
+        time: new Date(),
+      });
+    });
+    await this.diaryModel.findOneAndUpdate(
+      { _id: id },
+      {
+        shares: [...sharesNeedUpdate, ...sharesNotUpdate],
+      } as any,
+      {
+        strict: false,
+      },
     );
-    const diarySend = await this.diaryModel
-      .findOne({
-        $and: [{ _id: id }, { user: user.id }],
-      })
-      .populate('user');
     emailsSendDirectly.length &&
-      this.taskService.sendEmailDirectly(diarySend, emailsSendDirectly);
+      this.taskService.sendEmailDirectly(recordTemp, emailsSendDirectly);
     emailsSendNoti.length &&
-      this.taskService.sendNotifications(diarySend, emailsSendNoti);
+      this.taskService.sendNotifications(
+        'INVITE_VIEW_MEMO',
+        {
+          recordId: recordTemp.id,
+          picture: (recordTemp.user as any).picture,
+          name:
+            (recordTemp.user as any).name ||
+            (recordTemp.user as any).username ||
+            (recordTemp.user as any).email,
+        },
+        emailsSendNoti,
+      );
+    return recordTemp.id;
   }
 
   async getAllDiaryOfUser(userId: string) {
@@ -682,6 +757,28 @@ export class DiaryService {
     if (!diary) {
       throw new NotFoundException(`Diary with id ${diaryId} not found`);
     }
-    return await this.diaryShareService.getSharedUserByDiaryId(_user, diaryId);
+    return diary.shares;
+  }
+
+  async getSharedUsers(user: string) {
+    const allMemoOfUsers = await this.diaryModel.find({ user }).exec();
+    const data = [];
+    const emails = [];
+    allMemoOfUsers
+      .map(el => el.shares)
+      .forEach(shares => {
+        shares.forEach(el => {
+          if (!emails.includes(el.email)) {
+            data.push({
+              email: el.email,
+              picture: el.picture,
+              name: el.name,
+              username: el.username,
+            });
+            emails.push(el.email);
+          }
+        });
+      });
+    return data;
   }
 }
