@@ -317,10 +317,13 @@ export class AuthService {
         HttpStatus.BAD_REQUEST,
       );
     }
-    const isValid = await bcrypt.compare(oldPass, user.password || '');
-    if (!isValid) {
-      throw new HttpException('Old password is wrong', HttpStatus.BAD_REQUEST);
+    if (oldPass !== '' || user.password !== null) {
+      const isValid = await bcrypt.compare(oldPass, user.password || '');
+      if (!isValid) {
+        throw new HttpException('Mật khẩu không đúng', HttpStatus.BAD_REQUEST);
+      }
     }
+
     const pwd = await bcrypt.hash(newPass, 10);
     return await this.userModel.findOneAndUpdate(
       { _id: userId },

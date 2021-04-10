@@ -163,7 +163,7 @@ export class AuthController {
     };
   }
 
-  @Put(['me/update-pasword'])
+  @Put(['me/update-password'])
   @ApiBearerAuth('Authorization')
   @ApiResponse({
     status: 200,
