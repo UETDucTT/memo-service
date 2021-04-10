@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsDateString, IsMongoId, IsOptional } from 'class-validator';
+import {
+  IsArray,
+  IsDateString,
+  IsMongoId,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 import { BadRequestException } from '@nestjs/common';
 
@@ -62,6 +68,11 @@ export class CreateArticleDto {
 }
 
 export class SearchArticleDto {
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  q: string;
+
   @ApiProperty({ required: false, default: 1 })
   @IsOptional()
   @Transform(({ value: val }) => {

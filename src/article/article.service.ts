@@ -31,6 +31,7 @@ export class ArticleService {
 
   async getList(params: SearchArticleDto) {
     const {
+      q,
       page,
       pageSize,
       fromDate,
@@ -75,7 +76,13 @@ export class ArticleService {
     }
 
     const whereQuery = {
-      $and: [{ ...betweenCondition }, { ...inCondition }],
+      $and: [
+        { ...betweenCondition },
+        { ...inCondition },
+        {
+          title: { $regex: `.*${q || ''}.*`, $options: 'i' },
+        },
+      ],
     };
     const result = await (this.articleModel as any).paginate(whereQuery, {
       page,
