@@ -114,7 +114,7 @@ export class DiaryController {
       docs,
       hasNextPage: hasMore,
       totalDocs,
-    } = await this.diaryService.getDiaryShareWithMe({
+    } = await this.diaryService.getDiaryShareWithMeV1({
       ...dto,
       user,
     });
