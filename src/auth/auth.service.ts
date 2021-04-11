@@ -22,6 +22,7 @@ import { ConfigService } from '@nestjs/config';
 import { User as UserMongo, UserDocument } from './auth.schema';
 import * as admin from 'firebase-admin';
 import serviceAccount from '../../serviceAccountKey.json';
+import { removeAccents } from 'src/helpers/string';
 
 @Injectable()
 export class AuthService {
@@ -379,5 +380,31 @@ export class AuthService {
 
   async getAllUser() {
     return await this.userModel.find().select('-password');
+  }
+
+  async searchUsers(keyword: string) {
+    const keywordNotSign = removeAccents(keyword);
+    const users = await this.userModel
+      .find({
+        $or: [
+          {
+            email: { $regex: `.*${keywordNotSign || ''}.*`, $options: 'i' },
+          },
+          {
+            username: { $regex: `.*${keywordNotSign || ''}.*`, $options: 'i' },
+          },
+          {
+            name: { $regex: `.*${keywordNotSign || ''}.*`, $options: 'i' },
+          },
+        ],
+      })
+      .exec();
+    return users.map(el => ({
+      id: el._id,
+      email: el.email,
+      username: el.username,
+      name: el.name,
+      picture: el.picture,
+    }));
   }
 }

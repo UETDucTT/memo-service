@@ -11,6 +11,7 @@ import {
   forwardRef,
   Res,
   Put,
+  Query,
 } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
@@ -29,6 +30,7 @@ import {
   RequestForgotPasswordDto,
   ResetPasswordDto,
   UpdatePasswordDto,
+  SearchUsersDto,
 } from './auth.dto';
 import { OnlyId, UserOverviewResponse } from 'src/diary/diary.model';
 import { TransformInterceptor } from './transform.inteceptor';
@@ -223,6 +225,22 @@ export class AuthController {
     );
     return {
       id: res.id,
+    };
+  }
+
+  @Get(['search-users'])
+  @ApiBearerAuth('Authorization')
+  @ApiResponse({
+    status: 200,
+    description: 'Search user by keyword',
+  })
+  async searchUsers(
+    @AuthMeta() user,
+    @Query() dto: SearchUsersDto,
+  ): Promise<any> {
+    const res = await this.authService.searchUsers(dto.q);
+    return {
+      users: res,
     };
   }
 }

@@ -124,3 +124,10 @@ export class ResetPasswordDto {
   })
   newPassword: string;
 }
+
+export class SearchUsersDto {
+  @ApiProperty()
+  @IsDefined()
+  @IsString()
+  q: string;
+}
