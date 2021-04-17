@@ -14,6 +14,12 @@ export class Category {
 
   @Prop({ required: false })
   type?: string;
+
+  @Prop({ required: false })
+  image?: string;
+
+  @Prop({ required: false })
+  description?: string;
 }
 
 export type CategoryDocument = Category & Document;

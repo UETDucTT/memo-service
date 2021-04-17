@@ -23,6 +23,12 @@ export class CategoryDto {
 
   @ApiProperty()
   type?: string;
+
+  @ApiProperty()
+  image?: string;
+
+  @ApiProperty()
+  description?: string;
 }
 
 export class ParamCategoryDto {
@@ -47,6 +53,16 @@ export class EditCategoryDto {
   @IsOptional()
   @IsString()
   type?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  image?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  description?: string;
 }
 
 export class CreateCategoryDtoSingle {
@@ -63,6 +79,16 @@ export class CreateCategoryDtoSingle {
   @IsOptional()
   @IsString()
   type?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  image?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  description?: string;
 }
 
 export class CreateCategoryDto {
