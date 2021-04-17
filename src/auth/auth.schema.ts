@@ -37,6 +37,14 @@ export class User {
   @ApiProperty()
   username: string;
 
+  @Prop({ default: 0 })
+  @ApiProperty()
+  fileStorage: number;
+
+  @Prop({ default: 0 })
+  @ApiProperty()
+  recordTime: number;
+
   @Prop({ select: false })
   @ApiProperty({ writeOnly: true })
   password: string;

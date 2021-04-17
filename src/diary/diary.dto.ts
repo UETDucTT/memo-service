@@ -15,6 +15,8 @@ import {
   ValidateNested,
   ArrayMinSize,
   IsNotEmpty,
+  IsNumber,
+  Min,
 } from 'class-validator';
 import { Type } from 'src/resource/resource.entity';
 import { Status } from './diary.entity';
@@ -34,6 +36,11 @@ export class ResourceDto {
   @IsOptional()
   @IsString()
   name?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  size?: number;
 }
 
 export class LinkDto {
@@ -238,4 +245,12 @@ export class ShareDiariesDto {
   @ArrayMinSize(1)
   @CTType(() => ShareDiaryDto)
   emails: ShareDiaryDto[];
+}
+
+export class RecordTimeDto {
+  @ApiProperty()
+  @IsNumber()
+  @Min(0)
+  @Expose()
+  time: number;
 }

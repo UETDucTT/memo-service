@@ -25,6 +25,7 @@ import {
   EditDiaryDto,
   TriggerShareDiaryDto,
   ShareDiariesDto,
+  RecordTimeDto,
 } from './diary.dto';
 import { AuthMeta } from 'src/auth/auth.decorator';
 import {
@@ -43,6 +44,25 @@ import { TransformInterceptor } from './transform.inteceptor';
 @UseInterceptors(new TransformInterceptor())
 export class DiaryController {
   constructor(private diaryService: DiaryService) {}
+
+  @Post(['/record-time'])
+  @ApiBearerAuth('Authorization')
+  @ApiResponse({
+    status: 200,
+    description: 'Add record time',
+  })
+  async updateRecordTime(
+    @Body() body: RecordTimeDto,
+    @AuthMeta() user,
+  ): Promise<any> {
+    const newTime = await this.diaryService.updateRecordTime(
+      user.id,
+      body.time,
+    );
+    return {
+      time: newTime,
+    };
+  }
 
   @Get(['/summary'])
   @ApiBearerAuth('Authorization')

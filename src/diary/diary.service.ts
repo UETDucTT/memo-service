@@ -138,15 +138,19 @@ export class DiaryService {
       })
       .countDocuments()
       .exec();
+
+    const user = await this.userService.findOne({ _id: userId });
     return {
       total: totalDiaries,
       current: currentDiaries,
       today: totalDiariesToday,
+      fileStorage: user.fileStorage,
+      recordTime: user.recordTime,
     };
   }
 
   async create(params: CreateDiaryDtoWithUser) {
-    const { tagIds, ...rest } = params;
+    const { tagIds, resources, ...rest } = params;
     const tags = [];
     if (tagIds?.length) {
       for (let i = 0; i < tagIds.length; i++) {
@@ -159,7 +163,12 @@ export class DiaryService {
         tags.push(tagIds[i]);
       }
     }
-    const diaryObj = new this.diaryModel({ ...rest, tags });
+    let newStorage = 0;
+    if (resources.length) {
+      newStorage = resources.reduce((acc, curr) => acc + curr.size || 0, 0);
+    }
+    if (newStorage) await this.updateStorage(rest.user, newStorage);
+    const diaryObj = new this.diaryModel({ ...rest, resources, tags });
     const diary = await diaryObj.save();
     return diary;
   }
@@ -174,7 +183,17 @@ export class DiaryService {
     if (!diary) {
       throw new NotFoundException(`Diary with id ${id} not found`);
     }
+    let newStorage = 0;
     if (rest.resources) {
+      newStorage = -diary.resources.reduce(
+        (acc, curr) => acc + curr.size || 0,
+        0,
+      );
+      newStorage = rest.resources.reduce(
+        (acc, curr) => acc + curr.size || 0,
+        newStorage,
+      );
+
       diary.resources = [];
     }
 
@@ -197,6 +216,8 @@ export class DiaryService {
         (rest as any).tags = tags;
       }
     }
+
+    if (newStorage) await this.updateStorage(userId, newStorage);
 
     await this.diaryModel.findOneAndUpdate(
       { _id: id },
@@ -269,7 +290,17 @@ export class DiaryService {
       throw new BadRequestException(`Disallow update record with id: ${id}`);
     }
     const { tagIds, ...rest } = params;
+
+    let newStorage = 0;
     if (rest.resources) {
+      newStorage = -record.resources.reduce(
+        (acc, curr) => acc + curr.size || 0,
+        0,
+      );
+      newStorage = rest.resources.reduce(
+        (acc, curr) => acc + curr.size || 0,
+        newStorage,
+      );
       record.resources = [];
     }
 
@@ -291,6 +322,9 @@ export class DiaryService {
         (rest as any).tags = tags;
       }
     }
+
+    if (newStorage)
+      await this.updateStorage((record.user as any).id, newStorage);
 
     await this.diaryModel.findOneAndUpdate(
       { _id: id },
@@ -319,6 +353,12 @@ export class DiaryService {
     if (!share) {
       throw new BadRequestException(`Disallow update record with id: ${id}`);
     }
+    const newStorage = -record.resources.reduce(
+      (acc, curr) => acc + curr.size || 0,
+      0,
+    );
+    if (newStorage)
+      await this.updateStorage((record.user as any).id, newStorage);
     await record.remove();
     return id;
   }
@@ -330,6 +370,11 @@ export class DiaryService {
     if (!diary) {
       throw new NotFoundException(`Diary with id ${id} not found`);
     }
+    const newStorage = -diary.resources.reduce(
+      (acc, curr) => acc + curr.size || 0,
+      0,
+    );
+    if (newStorage) await this.updateStorage(userId, newStorage);
     await diary.remove();
     return id;
   }
@@ -784,5 +829,25 @@ export class DiaryService {
         });
       });
     return data;
+  }
+
+  async updateStorage(userId: string, newStorage: number) {
+    const user = await this.userService.findOne({ _id: userId });
+    const updated =
+      (user.fileStorage || 0) + newStorage > 0
+        ? (user.fileStorage || 0) + newStorage
+        : 0;
+    await this.userService.update(userId, {
+      fileStorage: updated,
+    });
+  }
+
+  async updateRecordTime(userId: string, time: number) {
+    const user = await this.userService.findOne({ _id: userId });
+
+    await this.userService.update(userId, {
+      recordTime: (user.recordTime || 0) + time,
+    });
+    return (user.recordTime || 0) + time;
   }
 }

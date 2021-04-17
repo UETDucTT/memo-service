@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsDateString,
   Matches,
+  IsNumber,
 } from 'class-validator';
 
 export class LoginDto {
@@ -61,7 +62,7 @@ export class UpdateProfileDto {
   @ApiProperty()
   @IsOptional()
   @IsString()
-  name: string;
+  name?: string;
 
   @ApiProperty()
   @IsOptional()
@@ -69,22 +70,30 @@ export class UpdateProfileDto {
   @Matches(/^[a-zA-Z0-9]{6,20}$/, {
     message: 'Tên TK từ 6 đến 20 ký tự, chỉ bao gồm chữ số & chữ cái',
   })
-  username: string;
+  username?: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  gender: string;
+  gender?: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  picture: string;
+  picture?: string;
 
   @ApiProperty()
   @IsOptional()
   @IsDateString()
-  birthday: Date;
+  birthday?: Date;
+
+  @IsOptional()
+  @IsNumber()
+  fileStorage?: number;
+
+  @IsOptional()
+  @IsNumber()
+  recordTime?: number;
 }
 
 export class UpdatePasswordDto {

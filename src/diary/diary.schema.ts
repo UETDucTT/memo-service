@@ -15,6 +15,9 @@ export class Resource {
 
   @Prop()
   name: string;
+
+  @Prop({ default: 0 })
+  size: number;
 }
 
 const ResourceSchema = SchemaFactory.createForClass(Resource);
