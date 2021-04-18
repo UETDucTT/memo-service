@@ -164,7 +164,7 @@ export class DiaryService {
       }
     }
     let newStorage = 0;
-    if (resources.length) {
+    if (resources?.length) {
       newStorage = resources.reduce((acc, curr) => acc + curr.size || 0, 0);
     }
     if (newStorage) await this.updateStorage(rest.user, newStorage);
