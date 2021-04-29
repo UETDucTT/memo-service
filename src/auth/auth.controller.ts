@@ -55,6 +55,7 @@ export class AuthController {
   })
   async loginGoogle(@Body() req: IDToken): Promise<SystemToken> {
     try {
+      console.log(req);
       const res = await this.authService.loginGoogle(req.idToken);
       return res;
     } catch (err) {
