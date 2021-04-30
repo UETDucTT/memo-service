@@ -31,6 +31,7 @@
     "@nestjs/swagger": "^4.6.1",
     "@nestjs/typeorm": "^7.1.4",
     "@nestjs/websockets": "^7.5.5",
+    "@nextnm/nestjs-mailgun": "^1.1.1",
     "@types/aws-sdk": "^2.7.0",
     "@types/multer-s3": "^2.7.9",
     "aws-sdk": "^2.877.0",

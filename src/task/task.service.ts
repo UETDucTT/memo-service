@@ -14,12 +14,14 @@ import Bluebird from 'bluebird';
 import toDate from 'date-fns/toDate';
 import { ArticleService } from 'src/article/article.service';
 import xml2js from 'xml2js';
+import { MailgunService, EmailOptions } from '@nextnm/nestjs-mailgun';
 
 fetch.Promise = Bluebird;
 
 @Injectable()
 export class TaskService {
   constructor(
+    private mailgunService: MailgunService,
     private readonly mailerService: MailerService,
     @Inject(forwardRef(() => AuthService))
     private readonly userService: AuthService,
@@ -36,19 +38,20 @@ export class TaskService {
     private config: ConfigService,
   ) {}
   async sendEmailDirectly(diary: any, emails: string[]) {
-    return this.mailerService
-      .sendMail({
-        to: emails,
-        from: 'iMemo <admin@imemo.vn>', // Senders email address
-        subject: `[iMemo] Thư mời xem memo của ${diary.user.name}`,
-        context: {
-          name: diary.user.name,
-          link: `${this.config.get<string>('service.domainClient')}/share?ref=${
-            diary.id
-          }`,
-        },
-        template: 'shareDiary',
-      })
+    const options: EmailOptions = {
+      from: 'iMemo <admin@ductt.tk>',
+      to: emails,
+      subject: `[iMemo] Thư mời xem memo của ${diary.user.name}`,
+      template: 'share-memo',
+      'h:X-Mailgun-Variables': JSON.stringify({
+        name: diary.user.name,
+        link: `${this.config.get<string>('service.domainClient')}/share?ref=${
+          diary.id
+        }`,
+      }),
+    };
+    return this.mailgunService
+      .sendEmail(options)
       .then(async success => {
         console.log(success);
       })
@@ -127,19 +130,20 @@ export class TaskService {
     userInfo: { username: string; email: string },
     token: string,
   ) {
-    this.mailerService
-      .sendMail({
-        to: userInfo.email,
-        from: 'iMemo <admin@imemo.vn>', // Senders email address
-        subject: `[iMemo] Bạn cần xác thực email trước khi đăng nhập 😱`,
-        context: {
-          name: userInfo.username,
-          link: `${this.config.get<string>(
-            'service.domainClient',
-          )}/confirm-register?token=${token}`,
-        },
-        template: 'verifyAccount',
-      })
+    const options: EmailOptions = {
+      from: 'iMemo <admin@ductt.tk>',
+      to: userInfo.email,
+      subject: `[iMemo] Bạn cần xác thực email trước khi đăng nhập 😱`,
+      template: 'verify-account',
+      'h:X-Mailgun-Variables': JSON.stringify({
+        name: userInfo.username,
+        link: `${this.config.get<string>(
+          'service.domainClient',
+        )}/confirm-register?token=${token}`,
+      }),
+    };
+    this.mailgunService
+      .sendEmail(options)
       .then(async success => {
         console.log(success);
       })
@@ -148,20 +152,21 @@ export class TaskService {
       });
   }
   async sendEmailForgotPassword(user: UserMongo, token: string) {
-    this.mailerService
-      .sendMail({
-        to: user.email,
-        from: 'iMemo <trantienduc10@gmail.com>', // Senders email address
-        subject: `[iMemo] Đặt lại mật khẩu của bạn`,
-        context: {
-          link: `${this.config.get<string>(
-            'service.domainClient',
-          )}/forgot-password?token=${token}&name=${user.name || user.username}${
-            user.picture ? `&picture=${user.picture}` : ''
-          }`,
-        },
-        template: 'forgotPassword',
-      })
+    const options: EmailOptions = {
+      from: 'iMemo <admin@ductt.tk>',
+      to: user.email,
+      subject: `[iMemo] Đặt lại mật khẩu của bạn`,
+      template: 'forgot-password',
+      'h:X-Mailgun-Variables': JSON.stringify({
+        link: `${this.config.get<string>(
+          'service.domainClient',
+        )}/forgot-password?token=${token}&name=${user.name || user.username}${
+          user.picture ? `&picture=${user.picture}` : ''
+        }`,
+      }),
+    };
+    this.mailgunService
+      .sendEmail(options)
       .then(async success => {
         console.log(success);
       })

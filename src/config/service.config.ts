@@ -13,6 +13,8 @@ export interface ServiceConfig {
   s3SecretAccessKey: string;
   s3Endpoint: string;
   bucketName: string;
+  mailgunDomain: string;
+  mailgunKey: string;
 }
 
 export default registerAs(
@@ -29,5 +31,7 @@ export default registerAs(
     s3Endpoint: getEnvVarOrDie('S3_ENDPOINT'),
     bucketName: getEnvVarOrDie('BUCKET_NAME'),
     maxSizeUpload: Number(getEnvVarOrDie('MAX_SIZE_UPLOAD')),
+    mailgunDomain: getEnvVarOrDie('MAILGUN_DOMAIN'),
+    mailgunKey: getEnvVarOrDie('MAILGUN_KEY'),
   }),
 );
