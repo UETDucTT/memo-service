@@ -39,7 +39,7 @@ export class TaskService {
   ) {}
   async sendEmailDirectly(diary: any, emails: string[]) {
     const options: EmailOptions = {
-      from: 'iMemo <admin@ductt.tk>',
+      from: 'iMemo <admin@imemo.asia>',
       to: emails,
       subject: `[iMemo] Thư mời xem memo của ${diary.user.name}`,
       template: 'share-memo',
@@ -131,7 +131,7 @@ export class TaskService {
     token: string,
   ) {
     const options: EmailOptions = {
-      from: 'iMemo <admin@ductt.tk>',
+      from: 'iMemo <admin@imemo.asia>',
       to: userInfo.email,
       subject: `[iMemo] Bạn cần xác thực email trước khi đăng nhập 😱`,
       template: 'verify-account',
@@ -153,7 +153,7 @@ export class TaskService {
   }
   async sendEmailForgotPassword(user: UserMongo, token: string) {
     const options: EmailOptions = {
-      from: 'iMemo <admin@ductt.tk>',
+      from: 'iMemo <admin@imemo.asia>',
       to: user.email,
       subject: `[iMemo] Đặt lại mật khẩu của bạn`,
       template: 'forgot-password',
